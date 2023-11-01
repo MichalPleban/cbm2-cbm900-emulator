@@ -1,7 +1,7 @@
 
 ROM = bin/emulate.bin bin/emulate.prg
 STUB = bin/stub.bin bin/stub.prg
-SRC = src/main.asm src/defs.asm src/screen.asm src/emul.asm src/irq.asm src/emul/scc.asm
+SRC = src/main.asm src/defs.asm src/cbm/screen.asm src/cbm/irq.asm src/cbm/kbd.asm src/cbm/serial.asm src/emul.asm src/emul/scc.asm
 
 all: $(ROM) $(STUB)
 disk: bin/disk.d80

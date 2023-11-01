@@ -19,6 +19,7 @@ TPI2:           .res 2
 screen_x:       .res 1
 screen_y:       .res 1
 screen_ptr:     .res 2
+screen_charset: .res 1
 
 ; Z8000 state
 z8000_addr:     .res 2
@@ -37,8 +38,21 @@ nmi_save_x:     .res 1
 nmi_save_y:     .res 1
 nmi_save_ind:   .res 1
 
+; Keyboard handling
+kbd_col:        .res 2
+kbd_row:        .res 1
+kbd_current:    .res 1
+kbd_last:       .res 1
+kbd_shift:      .res 1
+kbd_repeat:     .res 1
+
+; RS-232 serial port
+serial_ptr:     .res 2
+
 ; IO emulation 
 io_jump:        .res 2
 io_unimplemented: .res 1
 
 scratchpad:     .res 8
+
+kbd_buffer      = $F000

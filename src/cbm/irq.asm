@@ -20,11 +20,12 @@ irq_handler:
 ; Check TPI interrupt mask
         ldy #$07
         lda (TPI1), y
-        beq @end
 
-;        inc $FF
-;        lda $FF
-;        jsr screen_output
+; Scan keyboard on 50Hz interrupt
+        lsr a
+        bcc @not_50hz
+        jsr kbd_scan
+@not_50hz:
 
 @end:
 ; Clear TPI pending interrupt 

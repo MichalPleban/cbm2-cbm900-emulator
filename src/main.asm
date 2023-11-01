@@ -18,11 +18,16 @@ start:
         sta IND_REG
         jsr init
         jsr emul_init
+        jsr kbd_init
         jsr irq_init
-        jsr screen_clear
+        jsr screen_init
+        jsr serial_init
         lda #<banner
         ldy #>banner
         jsr screen_string
+        lda #<banner
+        ldy #>banner
+        jsr serial_string
 ;        jsr test
         cli
 loop:
@@ -61,11 +66,13 @@ test:
         rts
         
         
-.include "screen.asm"
 .include "emul.asm"
-.include "irq.asm"
+.include "cbm/screen.asm"
+.include "cbm/irq.asm"
+.include "cbm/kbd.asm"
+.include "cbm/serial.asm"
 
 banner:
-        .byt "Commodore 900 emulation layer (C) 2023 Michal Pleban", $0D, $0D, $00
+        .byt "Commodore 900 emulation layer version 0.1.0, (C) 2023 Michal Pleban", $0D, $0A, $0D, $0A, $00
         
 .res 16, $AA

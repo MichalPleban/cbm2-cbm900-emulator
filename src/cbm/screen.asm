@@ -1,4 +1,14 @@
 
+; Initialize the screen routines
+screen_init:
+        jsr screen_clear
+        lda #$00
+        sta screen_charset
+        ldx #$0A
+        lda #$40
+        jsr crtc_write
+        rts
+
 ; Clear screen and reset screen pointer to 0,0.
 ; Destroyed: A, X, Y
 screen_clear:
@@ -25,12 +35,43 @@ screen_clear:
 ; Destroyed: A, X, Y
 screen_output:
         cmp #$0D
+        bne @not_cr
+        lda #0
+        sta screen_x
+        jmp screen_cursor
+@not_cr:
+        cmp #$07
+        bne @not_bell
+        rts
+@not_bell:
+        cmp #$08
+        bne @not_bksp
+        lda screen_x
+        bne @bksp
+        rts
+@bksp:
+        dec screen_x
+        bpl screen_cursor
+@not_bksp:        
+        cmp #$09
+        bne @not_tab
+        lda screen_x
+        and #$F8
+        ora #$07
+        sta screen_x
+        bne screen_advance
+@not_tab:        
+        cmp #$0A
         beq screen_newline
         tax
+        and #$E0
+        ; Ignore control characters
+        bne @output
+        rts
+@output:
         lda petscii_table, x
         ldy screen_x
         sta (SCREEN),y
-        jmp screen_advance
         
 ; Move screen position one character.
 screen_advance:
@@ -39,7 +80,7 @@ screen_advance:
         cpy #80
         beq screen_newline
         sty screen_x
-        rts
+        bne screen_cursor
 screen_newline:
         ldy #$00
         sty screen_x
@@ -55,7 +96,7 @@ screen_newline:
         lda SCREEN+1
         adc #0
         sta SCREEN+1
-        rts
+        bne screen_cursor
 screen_scroll:
         lda #$D0
         sta scratchpad+1
@@ -86,6 +127,20 @@ screen_scroll:
         sta (SCREEN),y
         dey
         bpl @loop3
+
+; Position cursor on the screen
+screen_cursor:
+        lda screen_x
+        clc
+        adc SCREEN
+        ldx #15
+        jsr crtc_write
+        lda SCREEN+1
+        adc #0
+        and #$07
+        ora screen_charset
+        dex
+        jsr crtc_write
         rts
 
 ; Output null-terminated string to screen
@@ -104,6 +159,31 @@ screen_string:
         inc screen_ptr+1
         bne @loop
 @end:
+        rts
+
+; Read a CRTC register
+; Input: X = index number
+; Output: A = register value
+; Destroyed: Y
+crtc_read:
+        ldy #0
+        txa
+        sta (CRTC),y
+        iny
+        lda (CRTC),y
+        rts
+
+; Write a CRTC register
+; Input: X = index number, A = register value
+; Destroyed: Y
+crtc_write:
+        ldy #0
+        pha
+        txa
+        sta (CRTC),y
+        iny
+        pla
+        sta (CRTC),y
         rts
 
                 
