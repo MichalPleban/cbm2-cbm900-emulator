@@ -25,6 +25,7 @@ irq_handler:
         lsr a
         bcc @not_50hz
         jsr kbd_scan
+        jmp @end
 @not_50hz:
 
 @end:

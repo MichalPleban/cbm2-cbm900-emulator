@@ -4,8 +4,8 @@ screen_init:
         jsr screen_clear
         lda #$00
         sta screen_charset
-        ldx #$0A
-        lda #$40
+        ldx #10
+        lda #$20
         jsr crtc_write
         rts
 

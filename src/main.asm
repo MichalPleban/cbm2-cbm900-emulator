@@ -25,9 +25,6 @@ start:
         lda #<banner
         ldy #>banner
         jsr screen_string
-        lda #<banner
-        ldy #>banner
-        jsr serial_string
 ;        jsr test
         cli
 loop:
@@ -53,6 +50,8 @@ init:
         stx CIA+1
         sta CIA
         inx
+        stx ACIA+1
+        sta ACIA
         inx
         stx TPI1+1
         sta TPI1

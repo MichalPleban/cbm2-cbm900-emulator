@@ -19,7 +19,7 @@ nmi_handler:
         sta IND_REG
 
 ; Copy Z8000 status from the chipset register
-        ldy #3
+        ldy #5
 @copy:
         lda (CHIPSET), y
         sta z8000_addr, y
@@ -35,8 +35,7 @@ nmi_handler:
 
         dec z8000_addr+1
         bpl @not_cio
-        jsr undefined
-        jmp nmi_end
+        jmp cio_handle
 @not_cio:
         dec z8000_addr+1
         bpl @not_scc
@@ -85,6 +84,14 @@ undefined:
 
 ; Output information about I/O pending operation
 debug_start:
+        lda z8000_code+1
+        jsr debug_hex
+        lda z8000_code
+        jsr debug_hex
+        lda #':'
+        jsr serial_output
+        lda #' '
+        jsr serial_output
         bit z8000_status
         bpl @write
         lda #<debug_banner_in
@@ -94,21 +101,21 @@ debug_start:
         lda #<debug_banner_out
         ldy #>debug_banner_out
 @output:
-        jsr screen_string
+        jsr serial_string
         lda z8000_addr+1
         jsr debug_nibble
         lda z8000_addr
         jsr debug_hex
         lda #','
-        jsr screen_output
+        jsr serial_output
         lda #' '
-        jsr screen_output
+        jsr serial_output
         bit z8000_status
         bmi @end
         lda z8000_data
         jsr debug_hex
         lda #' '
-        jsr screen_output
+        jsr serial_output
 @end:
         rts
 
@@ -119,15 +126,17 @@ debug_end:
         lda z8000_data
         jsr debug_hex
         lda #' '
-        jsr screen_output
+        jsr serial_output
 @write:
         bit io_unimplemented
         bpl @end
         lda #'*'
-        jsr screen_output
+        jsr serial_output
 @end:
         lda #$0D
-        jmp screen_output
+        jsr serial_output
+        lda #$0A
+        jmp serial_output
         
 
 ; Output hexadecimal character to screen
@@ -145,7 +154,7 @@ debug_nibble:
         and #$0F
         tax
         lda hex_chars, x
-        jmp screen_output
+        jmp serial_output
 
 hex_chars:
         .byte "0123456789ABCDEF"
@@ -157,4 +166,5 @@ debug_banner_out:
 
 .endif
 
+.include "emul/cio.asm"
 .include "emul/scc.asm"

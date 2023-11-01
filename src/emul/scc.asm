@@ -3,7 +3,7 @@ scc_handle:
         lda z8000_status
         asl a
         lda z8000_addr
-        and #$FE
+        and #$3E
         adc #$00
         asl a
         tax

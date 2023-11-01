@@ -25,6 +25,7 @@ screen_charset: .res 1
 z8000_addr:     .res 2
 z8000_data:     .res 1
 z8000_status:   .res 1
+z8000_code:     .res 2
 
 ; IRQ handler variables
 irq_save_a:     .res 1
