@@ -62,3 +62,4 @@ scratchpad:     .res 8
 
 cio_registers:  .res $40
 cio2_registers: .res $40
+scc_registers:  .res $20

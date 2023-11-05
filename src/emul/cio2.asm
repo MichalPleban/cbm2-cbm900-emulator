@@ -33,7 +33,7 @@ cio2_load:
         rts
                                 
 cio2_table:
-        .word undefined, undefined      ; 00
+        .word empty, undefined          ; 00
         .word cio2_save, cio2_load      ; 01
         .word cio2_save, cio2_load      ; 02
         .word cio2_save, cio2_load      ; 03

@@ -15,7 +15,9 @@ cio_handle:
         jmp nmi_end
 
         
-cio_tmp:
+; Register 08 - pattern match flags
+; We return 00 to indicate that there is no character from the keyboard 
+cio_in_08:
         lda #$00
         sta z8000_data
         rts
@@ -39,22 +41,22 @@ cio_load:
         rts
                         
 cio_table:
-        .word undefined, undefined      ; 00
-        .word undefined, undefined      ; 01
+        .word empty, undefined          ; 00
+        .word empty, empty              ; 01
         .word cio_save, cio_load        ; 02
         .word cio_save, cio_load        ; 03
         .word cio_save, cio_load        ; 04
         .word cio_save, cio_load        ; 05
         .word cio_save, cio_load        ; 06
         .word cio_save, cio_load        ; 07
-        .word undefined, cio_tmp        ; 08
-        .word undefined, undefined      ; 09
+        .word empty, cio_in_08          ; 08
+        .word empty, undefined          ; 09
         .word cio_save, cio_load        ; 0A
         .word cio_save, cio_load        ; 0B
         .word cio_save, cio_load        ; 0C
         .word cio_save, cio_load        ; 0D
-        .word undefined, undefined      ; 0E
-        .word undefined, undefined      ; 0F
+        .word empty, empty              ; 0E
+        .word empty, undefined          ; 0F
         .word undefined, undefined      ; 10
         .word undefined, undefined      ; 11
         .word undefined, undefined      ; 12
@@ -79,10 +81,10 @@ cio_table:
         .word cio_save, cio_load        ; 25
         .word cio_save, cio_load        ; 26
         .word cio_save, cio_load        ; 27
-        .word undefined, undefined      ; 28
+        .word empty, undefined          ; 28
         .word undefined, undefined      ; 29
         .word undefined, undefined      ; 2A
-        .word undefined, undefined      ; 2B
+        .word empty, undefined          ; 2B
         .word undefined, undefined      ; 2C
         .word undefined, undefined      ; 2D
         .word undefined, undefined      ; 2E

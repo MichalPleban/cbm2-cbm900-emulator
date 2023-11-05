@@ -14,45 +14,67 @@ scc_handle:
         jsr io_handle
         jmp nmi_end
 
-scc_status:
+; Register 00 - line status
+; We return 04 to indicate that it's OK to send the next character
+scc_in_00:
         lda #$04
         sta z8000_data
         rts
         
-scc_output:
+; Register 08 - transmit buffer
+; Output the transmitted character to screen
+scc_out_08:
         lda z8000_data
         jmp screen_output
-                
+
+scc_save:
+        lda z8000_addr
+        lsr a
+        and #$3F
+        tax
+        lda z8000_data
+        sta scc_registers,x
+        rts
+
+scc_load:
+        lda z8000_addr
+        lsr a
+        and #$3F
+        tax
+        lda scc_registers,x
+        sta z8000_data
+        rts
+                        
 scc_table:
-        .word undefined, scc_status     ; 00
-        .word undefined, undefined      ; 01
-        .word empty, undefined          ; 02
+        .word empty, scc_in_00          ; 00
+        .word scc_save, scc_load        ; 01
+        .word scc_save, scc_load        ; 02
         .word empty, undefined          ; 03
         .word empty, undefined          ; 04
         .word empty, undefined          ; 05
         .word empty, undefined          ; 06
         .word empty, undefined          ; 07
-        .word scc_output, undefined      ; 08
+        .word scc_out_08, undefined     ; 08
         .word empty, undefined          ; 09
         .word empty, undefined          ; 0A
         .word empty, undefined          ; 0B
-        .word empty, undefined          ; 0C
-        .word empty, undefined          ; 0D
+        .word scc_save, scc_load        ; 0C
+        .word scc_save, scc_load        ; 0D
         .word empty, undefined          ; 0E
-        .word empty, undefined          ; 0F
+        .word scc_save, scc_load        ; 0F
         .word undefined, undefined      ; 10
         .word undefined, undefined      ; 11
-        .word undefined, undefined      ; 12
+        .word scc_save, scc_load        ; 12
         .word undefined, undefined      ; 13
         .word undefined, undefined      ; 14
         .word undefined, undefined      ; 15
         .word undefined, undefined      ; 16
         .word undefined, undefined      ; 17
         .word undefined, undefined      ; 18
-        .word undefined, undefined      ; 19
+        .word empty, undefined          ; 19
         .word undefined, undefined      ; 1A
         .word undefined, undefined      ; 1B
-        .word undefined, undefined      ; 1C
-        .word undefined, undefined      ; 1D
+        .word scc_save, scc_load        ; 1C
+        .word scc_save, scc_load        ; 1D
         .word undefined, undefined      ; 1E
-        .word undefined, undefined      ; 1F
+        .word scc_save, scc_load        ; 1F
