@@ -48,6 +48,8 @@ kbd_current:    .res 1
 kbd_last:       .res 1
 kbd_shift:      .res 1
 kbd_repeat:     .res 1
+kbd_head:       .res 1
+kbd_tail:       .res 1
 
 ; RS-232 serial port
 serial_ptr:     .res 2

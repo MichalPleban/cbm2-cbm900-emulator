@@ -6,13 +6,14 @@ kbd_init:
         ldy #3
         lda #$FF
         sta (TPI2),y
+        sta kbd_last
         iny
         sta (TPI2),y
         lda #$00
         iny
         sta (TPI2),y
-        lda #$FF
-        sta kbd_last
+        sta kbd_head
+        sta kbd_tail
         rts
 
 kbd_scan:
@@ -104,15 +105,30 @@ kbd_scan:
         lda ctrl_table,x
 @do_output:
         beq @end
-        pha
-        jsr screen_output
-        pla
-        cmp #$0D
-        bne @end
-        lda #$0A
-        jsr screen_output
+        ldx kbd_tail
+        inx
+        cpx kbd_head
+        ; Buffer full?
+        beq @end
+        sta kbd_buffer,x
+        stx kbd_tail
         rts
 
+; Get next character from the buffer
+; Destroyed: X
+; Return: A = next character
+kbd_fetch:
+        ldx kbd_head
+        cpx kbd_tail
+        beq @nochar
+        lda kbd_buffer,x
+        inx
+        stx kbd_head
+        rts
+@nochar:
+        lda #$00
+        rts        
+        
 normal_table:
         .byt 0          ; F1
         .byt $27        ; Esc

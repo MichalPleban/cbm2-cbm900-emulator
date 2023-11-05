@@ -25,11 +25,8 @@ start:
         lda #<banner
         ldy #>banner
         jsr screen_string
-        jsr trace_start
         cli
-loop:
-        jmp loop
-        
+        jmp trace_start
         
 init:
         lda #$D0
@@ -73,6 +70,6 @@ test:
 .include "cbm/serial.asm"
 
 banner:
-        .byt "Commodore C900 emulation layer version 0.1.0, (C) 2023 Michal Pleban", $0A, $0D, $00
+        .byt "Commodore C900 emulation layer version 0.2.0, (C) 2023 Michal Pleban", $0D, $0A, $00
         
 .res 16, $AA

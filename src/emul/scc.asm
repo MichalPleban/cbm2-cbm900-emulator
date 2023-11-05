@@ -16,13 +16,26 @@ scc_handle:
 
 ; Register 00 - line status
 ; We return 04 to indicate that it's OK to send the next character
+; and if there is a character in the keyboard buffer, we or with 01.
 scc_in_00:
         lda #$04
+        ldx kbd_head
+        cpx kbd_tail
+        beq @nochar
+        ora #$01
+@nochar:
         sta z8000_data
         rts
         
+; Register 08 - receive buffer
+; Input the character from the keyboard.
+scc_in_08:
+        jsr kbd_fetch
+        sta z8000_data
+        rts
+
 ; Register 08 - transmit buffer
-; Output the transmitted character to screen
+; Output the transmitted character to screen.
 scc_out_08:
         lda z8000_data
         jmp screen_output
@@ -54,7 +67,7 @@ scc_table:
         .word empty, undefined          ; 05
         .word empty, undefined          ; 06
         .word empty, undefined          ; 07
-        .word scc_out_08, undefined     ; 08
+        .word scc_out_08, scc_in_08     ; 08
         .word empty, undefined          ; 09
         .word empty, undefined          ; 0A
         .word empty, undefined          ; 0B
