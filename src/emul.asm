@@ -25,7 +25,7 @@ nmi_handler:
         sta z8000_addr, y
         dey
         bpl @copy
-
+        
 ; Show debug banner if necessary
 .ifdef DEBUG
         jsr debug_start
@@ -35,13 +35,18 @@ nmi_handler:
 
         dec z8000_addr+1
         bpl @not_cio
+        bit z8000_addr
+        bmi @cio2
         jmp cio_handle
+@cio2:        
+        jmp cio2_handle
 @not_cio:
         dec z8000_addr+1
         bpl @not_scc
         jmp scc_handle
 @not_scc:
-
+        jsr undefined
+        
 nmi_end:
 
 ; Finish showing debug banner
@@ -50,7 +55,7 @@ nmi_end:
 .endif
 
 ; Restore registers
-        ldy #$02
+        ldy #2
         bit z8000_status
         bpl @notread
         ; Output the value to the Z8000 data bus
@@ -167,4 +172,5 @@ debug_banner_out:
 .endif
 
 .include "emul/cio.asm"
+.include "emul/cio2.asm"
 .include "emul/scc.asm"

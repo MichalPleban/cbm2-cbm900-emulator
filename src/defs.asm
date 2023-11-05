@@ -1,4 +1,6 @@
 
+kbd_buffer      = $F000
+
 .data
 .org $0000
 
@@ -56,4 +58,7 @@ io_unimplemented: .res 1
 
 scratchpad:     .res 8
 
-kbd_buffer      = $F000
+.org $0200
+
+cio_registers:  .res $40
+cio2_registers: .res $40

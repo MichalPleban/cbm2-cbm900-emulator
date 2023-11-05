@@ -25,7 +25,7 @@ start:
         lda #<banner
         ldy #>banner
         jsr screen_string
-;        jsr test
+        jsr trace_start
         cli
 loop:
         jmp loop
@@ -66,6 +66,7 @@ test:
         
         
 .include "emul.asm"
+.include "trace.asm"
 .include "cbm/screen.asm"
 .include "cbm/irq.asm"
 .include "cbm/kbd.asm"

@@ -19,22 +19,40 @@ cio_tmp:
         lda #$00
         sta z8000_data
         rts
-                
+
+cio_save:
+        lda z8000_addr
+        lsr a
+        and #$3F
+        tax
+        lda z8000_data
+        sta cio_registers,x
+        rts
+
+cio_load:
+        lda z8000_addr
+        lsr a
+        and #$3F
+        tax
+        lda cio_registers,x
+        sta z8000_data
+        rts
+                        
 cio_table:
         .word undefined, undefined      ; 00
         .word undefined, undefined      ; 01
-        .word undefined, undefined      ; 02
-        .word undefined, undefined      ; 03
-        .word undefined, undefined      ; 04
-        .word undefined, undefined      ; 05
-        .word undefined, undefined      ; 06
-        .word undefined, undefined      ; 07
-        .word undefined, cio_tmp      ; 08
+        .word cio_save, cio_load        ; 02
+        .word cio_save, cio_load        ; 03
+        .word cio_save, cio_load        ; 04
+        .word cio_save, cio_load        ; 05
+        .word cio_save, cio_load        ; 06
+        .word cio_save, cio_load        ; 07
+        .word undefined, cio_tmp        ; 08
         .word undefined, undefined      ; 09
-        .word undefined, undefined      ; 0A
-        .word undefined, undefined      ; 0B
-        .word undefined, undefined      ; 0C
-        .word undefined, undefined      ; 0D
+        .word cio_save, cio_load        ; 0A
+        .word cio_save, cio_load        ; 0B
+        .word cio_save, cio_load        ; 0C
+        .word cio_save, cio_load        ; 0D
         .word undefined, undefined      ; 0E
         .word undefined, undefined      ; 0F
         .word undefined, undefined      ; 10
@@ -43,24 +61,24 @@ cio_table:
         .word undefined, undefined      ; 13
         .word undefined, undefined      ; 14
         .word undefined, undefined      ; 15
-        .word undefined, undefined      ; 16
-        .word undefined, undefined      ; 17
-        .word undefined, undefined      ; 18
-        .word undefined, undefined      ; 19
-        .word undefined, undefined      ; 1A
-        .word undefined, undefined      ; 1B
-        .word undefined, undefined      ; 1C
-        .word undefined, undefined      ; 1D
-        .word undefined, undefined      ; 1E
+        .word cio_save, cio_load        ; 16
+        .word cio_save, cio_load        ; 17
+        .word cio_save, cio_load        ; 18
+        .word cio_save, cio_load        ; 19
+        .word cio_save, cio_load        ; 1A
+        .word cio_save, cio_load        ; 1B
+        .word cio_save, cio_load        ; 1C
+        .word cio_save, cio_load        ; 1D
+        .word cio_save, cio_load        ; 1E
         .word undefined, undefined      ; 1F
-        .word undefined, undefined      ; 20
-        .word undefined, undefined      ; 21
-        .word undefined, undefined      ; 22
-        .word undefined, undefined      ; 23
-        .word undefined, undefined      ; 24
-        .word undefined, undefined      ; 25
-        .word undefined, undefined      ; 26
-        .word undefined, undefined      ; 27
+        .word cio_save, cio_load        ; 20
+        .word cio_save, cio_load        ; 21
+        .word cio_save, cio_load        ; 22
+        .word cio_save, cio_load        ; 23
+        .word cio_save, cio_load        ; 24
+        .word cio_save, cio_load        ; 25
+        .word cio_save, cio_load        ; 26
+        .word cio_save, cio_load        ; 27
         .word undefined, undefined      ; 28
         .word undefined, undefined      ; 29
         .word undefined, undefined      ; 2A
@@ -85,3 +103,5 @@ cio_table:
         .word undefined, undefined      ; 3D
         .word undefined, undefined      ; 3E
         .word undefined, undefined      ; 3F
+
+        
