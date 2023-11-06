@@ -70,6 +70,8 @@ test:
 .include "cbm/serial.asm"
 
 banner:
-        .byt "Commodore C900 emulation layer version 0.2.0, (C) 2023 Michal Pleban", $0D, $0A, $00
-        
+        .byt "Commodore C900 emulation layer version 0.2.1, (C) 2023 Michal Pleban", $0D, $0A, $00
+
+.ifdef PRG
 .res 16, $AA
+.endif

@@ -106,11 +106,13 @@ kbd_scan:
 @do_output:
         beq @end
         ldx kbd_tail
-        inx
-        cpx kbd_head
+        ldy kbd_tail
+        iny
+        cpy kbd_head
         ; Buffer full?
         beq @end
         sta kbd_buffer,x
+        inx
         stx kbd_tail
         rts
 

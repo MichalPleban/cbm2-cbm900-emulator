@@ -143,6 +143,12 @@ debug_end:
         lda #$0A
         jmp serial_output
         
+debug_banner_in:
+        .byte "IN  ", 0
+debug_banner_out:
+        .byte "OUT ", 0
+
+.endif
 
 ; Output hexadecimal character to screen
 ; Input: A = hex number
@@ -163,13 +169,6 @@ debug_nibble:
 
 hex_chars:
         .byte "0123456789ABCDEF"
-
-debug_banner_in:
-        .byte "IN  ", 0
-debug_banner_out:
-        .byte "OUT ", 0
-
-.endif
 
 .include "emul/cio.asm"
 .include "emul/cio2.asm"
