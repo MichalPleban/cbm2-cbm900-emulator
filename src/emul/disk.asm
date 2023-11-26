@@ -1,0 +1,111 @@
+
+disk_init:
+        lda #$00
+        sta disk_request
+        rts
+
+disk_handle:
+        bit disk_request
+        bmi @handle
+        rts
+@handle:
+        ; Clear pending request flag
+        lda #$00
+        sta disk_request
+        
+        ; Copy SASI command block from Z8000 RAM to bank 15
+        jsr sasi_load_bank15
+        
+        ; Copy SASI command block from bank 15 to bank 1
+        lda #<sasi_command
+        sta scratchpad
+        lda #>sasi_command
+        sta scratchpad+1
+        ldy #$1F
+@loop2:
+        lda (scratchpad), y
+        sta sasi_command, y
+        dey
+        bpl @loop2
+        
+        ; Check which disk drive is being addressed
+        bit sasi_command+12
+        bpl @disk1
+        lda #$00
+        .byt $2C
+@disk1:
+        lda #$10
+        sta disk_unit
+        
+.ifdef DEBUG
+        lda #<disk_banner1
+        ldy #>disk_banner1
+        jsr serial_string
+        ldx disk_unit
+        lda sasi_command, x
+        jsr debug_hex
+        lda #<disk_banner2
+        ldy #>disk_banner2
+        jsr serial_string
+        lda disk_unit
+        lsr a
+        lsr a
+        lsr a
+        lsr a
+        jsr debug_hex
+        lda #$0D
+        jsr serial_output
+        lda #$0A
+        jsr serial_output
+.endif
+
+        ; Fake status 
+        ldx disk_unit
+        lda sasi_command, x
+        cmp #$08
+        bne @not_read
+        lda #$80
+        .byt $2C
+@not_read:
+        lda #$00
+        sta sasi_command+12, x
+
+.ifdef DEBUG
+        lda #<disk_banner3
+        ldy #>disk_banner3
+        jsr serial_string
+        ldx disk_unit
+        lda sasi_command+12, x
+        jsr debug_hex
+        lda #$0D
+        jsr serial_output
+        lda #$0A
+        jsr serial_output
+.endif
+
+        ; Copy SASI command block back to bank 15
+        lda #<sasi_command
+        sta scratchpad
+        lda #>sasi_command
+        sta scratchpad+1
+        ldy #$1F
+@loop3:
+        lda sasi_command, y
+        sta (scratchpad), y
+        dey
+        bpl @loop3
+
+        ; Copy SASI command block from bank 15 to Z8000 RAM
+        jsr sasi_save_bank15
+
+        rts
+        
+.ifdef DEBUG
+disk_banner1:
+        .byt "Disk command ", 0
+disk_banner2:
+        .byt " issued to unit ", 0
+disk_banner3:
+        .byt "Command status: ", 0
+.endif
+        

@@ -8,4 +8,6 @@
         lda #$01
         sta $00
 
+.ifdef PRG
 .res 16, $AA
+.endif

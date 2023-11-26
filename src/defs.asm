@@ -58,10 +58,16 @@ serial_ptr:     .res 2
 io_jump:        .res 2
 io_unimplemented: .res 1
 
+; Disk emulation
+disk_request:   .res 1
+disk_unit:      .res 1
+
 scratchpad:     .res 8
 
 .org $0200
 
+; I/O register copies
 cio_registers:  .res $40
 cio2_registers: .res $40
 scc_registers:  .res $20
+sasi_command:   .res $20

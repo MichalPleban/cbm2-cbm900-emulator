@@ -5,6 +5,7 @@ emul_init:
         sta $FFFA
         lda #>nmi_handler
         sta $FFFB
+        jsr disk_init
         rts
         
 nmi_handler:
@@ -45,6 +46,30 @@ nmi_handler:
         bpl @not_scc
         jmp scc_handle
 @not_scc:
+        dec z8000_addr+1
+        bpl @not_200
+        jsr undefined
+        jmp nmi_end
+@not_200:
+        dec z8000_addr+1
+        bpl @not_300
+        jsr undefined
+        jmp nmi_end
+@not_300:
+        dec z8000_addr+1
+        bpl @not_400
+        jsr undefined
+        jmp nmi_end
+@not_400:
+        dec z8000_addr+1
+        bpl @not_500
+        lda z8000_data
+        beq @not_disk
+        lda #$80
+        sta disk_request
+@not_disk:
+        jmp nmi_end
+@not_500:
         jsr undefined
         
 nmi_end:
@@ -173,3 +198,4 @@ hex_chars:
 .include "emul/cio.asm"
 .include "emul/cio2.asm"
 .include "emul/scc.asm"
+.include "emul/disk.asm"
