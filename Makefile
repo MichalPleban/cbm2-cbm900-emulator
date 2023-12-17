@@ -4,9 +4,9 @@ STUB = bin/stub.bin bin/stub.prg
 SD = bin/sd.bin bin/sd.prg
 SRC_MAIN = src/main.asm src/defs.asm src/trace.asm src/emul.asm 
 SRC_CBM = src/cbm/screen.asm src/cbm/irq.asm src/cbm/kbd.asm src/cbm/serial.asm
-SRC_EMUL = src/emul/scc.asm src/emul/cio.asm src/emul/cio2.asm src/emul/disk.asm
-SRC_SD = src/sd/defs.asm src/sd/init.asm src/sd/access.asm
-SRC = $(SRC_MAIN) $(SRC_CBM) $(SRC_EMUL)
+SRC_EMUL = src/emul/scc.asm src/emul/cio.asm src/emul/cio2.asm src/emul/disk.asm src/emul/irq.asm
+SRC_SD = src/sd/init.asm src/sd/access.asm
+SRC = $(SRC_MAIN) $(SRC_CBM) $(SRC_EMUL) $(SRC_SD)
 
 all: $(ROM) $(STUB) $(SD)
 disk: bin/disk.d80
@@ -31,12 +31,12 @@ bin/stub.prg: src/tools/stub.asm
 	ld65 src/tools/stub.o -C src/main.cfg -o bin/stub.prg
 	rm src/tools/stub.o
 
-bin/sd.bin: src/tools/sd.asm $(SRC_SD)
+bin/sd.bin: src/tools/sd.asm $(SRC_SD) src/sd/defs.asm
 	ca65 src/tools/sd.asm
 	ld65 src/tools/sd.o -C src/main.cfg -o bin/sd.bin
 	rm src/tools/sd.o
 
-bin/sd.prg: src/tools/sd.asm $(SRC_SD)
+bin/sd.prg: src/tools/sd.asm $(SRC_SD) src/sd/defs.asm
 	ca65 src/tools/sd.asm -DPRG -DDEBUG
 	ld65 src/tools/sd.o -C src/main.cfg -o bin/sd.prg
 	rm src/tools/sd.o

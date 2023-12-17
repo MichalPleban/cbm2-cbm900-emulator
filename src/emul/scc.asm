@@ -1,4 +1,10 @@
 
+scc_init:
+        lda #0
+        sta scc_irq_pending
+        sta scc_irq_enable
+        rts
+
 scc_handle:
         lda z8000_status
         asl a
@@ -14,6 +20,19 @@ scc_handle:
         jsr io_handle
         jmp nmi_end
 
+scc_set_irq:
+        bit scc_irq_enable
+        bpl @no_irq
+        ldx kbd_head
+        cpx kbd_tail
+        beq @no_irq
+        lda #$80
+        .byt $2c
+@no_irq:
+        lda #$00
+        sta scc_irq_pending
+        jmp irq_issue        
+        
 ; Register 00 - line status
 ; We return 04 to indicate that it's OK to send the next character
 ; and if there is a character in the keyboard buffer, we or with 01.
@@ -32,6 +51,7 @@ scc_in_00:
 scc_in_08:
         jsr kbd_fetch
         sta z8000_data
+        jsr scc_set_irq
         rts
 
 ; Register 08 - transmit buffer
@@ -39,6 +59,22 @@ scc_in_08:
 scc_out_08:
         lda z8000_data
         jmp screen_output
+        
+; Register 02 - interrupt vector
+scc_out_02:
+        lda z8000_data
+        sta scc_irq_vector
+        jmp scc_save
+
+; Register 09 - interrupt enable
+scc_out_09:
+        lda z8000_data
+        asl a
+        asl a
+        asl a
+        asl a
+        sta scc_irq_enable
+        rts
 
 scc_save:
         lda z8000_addr
@@ -61,14 +97,14 @@ scc_load:
 scc_table:
         .word empty, scc_in_00          ; 00
         .word scc_save, scc_load        ; 01
-        .word scc_save, scc_load        ; 02
+        .word scc_out_02, scc_load        ; 02
         .word empty, undefined          ; 03
         .word empty, undefined          ; 04
         .word empty, undefined          ; 05
         .word empty, undefined          ; 06
         .word empty, undefined          ; 07
         .word scc_out_08, scc_in_08     ; 08
-        .word empty, undefined          ; 09
+        .word scc_out_09, undefined          ; 09
         .word empty, undefined          ; 0A
         .word empty, undefined          ; 0B
         .word scc_save, scc_load        ; 0C

@@ -1,4 +1,10 @@
 
+cio_init:
+        lda #0
+        sta timer_irq_enable
+        sta timer_irq_pending
+        rts
+
 cio_handle:
         lda z8000_status
         asl a
@@ -14,13 +20,41 @@ cio_handle:
         jsr io_handle
         jmp nmi_end
 
-        
+cio_timer:
+        bit timer_irq_enable
+        bpl @disabled
+        lda #$80
+        sta timer_irq_pending
+        jmp irq_issue
+@disabled:
+        rts
+                
 ; Register 08 - pattern match flags
 ; We return 00 to indicate that there is no character from the keyboard 
 cio_in_08:
         lda #$00
         sta z8000_data
         rts
+
+; Register 04 - timer interrupt vector
+cio_out_04:
+        lda z8000_data
+        sta timer_irq_vector
+        jmp cio_save
+
+; Register 00 - master interrupt control
+cio_out_00:
+        lda z8000_data
+        sta timer_irq_enable
+        jmp cio_save
+
+; Register 0C - clear interrupt
+; TODO: handle written values properly ($24 clears IRQ)
+cio_out_0c:
+        lda #0
+        sta timer_irq_pending
+        jsr irq_issue
+        jmp cio_save
 
 cio_save:
         lda z8000_addr
@@ -39,13 +73,13 @@ cio_load:
         lda cio_registers,x
         sta z8000_data
         rts
-                        
+                                
 cio_table:
-        .word empty, undefined          ; 00
+        .word cio_out_00, undefined     ; 00
         .word empty, empty              ; 01
         .word cio_save, cio_load        ; 02
         .word cio_save, cio_load        ; 03
-        .word cio_save, cio_load        ; 04
+        .word cio_out_04, cio_load      ; 04
         .word cio_save, cio_load        ; 05
         .word cio_save, cio_load        ; 06
         .word cio_save, cio_load        ; 07
@@ -53,7 +87,7 @@ cio_table:
         .word empty, undefined          ; 09
         .word cio_save, cio_load        ; 0A
         .word cio_save, cio_load        ; 0B
-        .word cio_save, cio_load        ; 0C
+        .word cio_out_0c, cio_load      ; 0C
         .word cio_save, cio_load        ; 0D
         .word empty, empty              ; 0E
         .word empty, undefined          ; 0F

@@ -4,6 +4,10 @@ irq_init:
         sta $FFFE
         lda #>irq_handler
         sta $FFFF
+.ifdef DEBUG
+        lda #25
+        sta irq_50hz
+.endif
         rts
 
 irq_handler:
@@ -25,6 +29,15 @@ irq_handler:
         lsr a
         bcc @not_50hz
         jsr kbd_scan
+.ifdef DEBUG
+        dec irq_50hz
+        beq @do_50hz
+        jmp @end
+@do_50hz:
+        lda #25
+        sta irq_50hz
+.endif
+        jsr cio_timer
         jmp @end
 @not_50hz:
 

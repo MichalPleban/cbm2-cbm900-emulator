@@ -18,20 +18,23 @@ start:
         sta IND_REG
         
         jsr init
+        
         ; Pull /RESET low
         ldy #6
         lda (CHIPSET),y
         ora #$01
         sta (CHIPSET),y
         
-        jsr emul_init
-        jsr kbd_init
-        jsr irq_init
         jsr screen_init
-        jsr serial_init
         lda #<banner
         ldy #>banner
         jsr screen_string
+        jsr disk_init
+        bcs @disk_error
+        jsr serial_init
+        jsr kbd_init
+        jsr emul_init
+        jsr irq_init
         cli
         
         ; Pull /RESET high
@@ -45,6 +48,14 @@ start:
         jsr disk_handle
         jmp @loop  
 
+@disk_error:
+        lda #<disk_banner
+        ldy #>disk_banner
+        jsr screen_string
+@disk_loop:        
+        jmp @disk_loop
+
+        
 init:
         ; Initialize chip pointers
         lda #$D0
@@ -88,7 +99,7 @@ init:
         rts
 
 banner:
-        .byt "Commodore C900 emulation layer version 0.2.2, (C) 2023 Michal Pleban", $0D, $0A, $00
+        .byt "Commodore C900 emulation layer version 0.4.0, (C) 2023 Michal Pleban", $0D, $0A, $00
 
 test:
         jsr nmi_handler
@@ -108,7 +119,7 @@ sasi_load_bank15:
         sta EXEC_REG
         ; Enable access to RAM & XOR A15
         lda $D906
-        ora #$16
+        ora #$12
         sta $D906
         lda #$08
         sta IND_REG
@@ -124,7 +135,7 @@ sasi_load_bank15:
         bpl @loop
         ; Disable access to RAM
         lda $D906
-        and #$E9
+        and #$CD
         sta $D906
         lda #$0F
         sta IND_REG
@@ -137,7 +148,7 @@ sasi_save_bank15:
         sta EXEC_REG
         ; Enable access to RAM & XOR A15
         lda $D906
-        ora #$16
+        ora #$12
         sta $D906
         lda #$08
         sta IND_REG
@@ -153,7 +164,7 @@ sasi_save_bank15:
         bpl @loop
         ; Disable access to RAM
         lda $D906
-        and #$E9
+        and #$CD
         sta $D906
         lda #$0F
         sta IND_REG
@@ -161,6 +172,47 @@ sasi_save_bank15:
         sta EXEC_REG
         rts
 
+sd_read_bank15:
+        lda #$0F
+        sta EXEC_REG
+        ; Enable access to RAM & XOR address lines if necessary
+        lda $D906
+        ora #$02
+;        ora sd_bank_flags
+        sta $D906
+        lda sd_bank
+        sta IND_REG
+        ; Read bytes in a loop
+        lda #2
+        sta sd_loop+1
+        lda #0
+        sta sd_loop
+@loop:
+        lda #$FF
+        sta $D907
+        nop
+        nop
+        nop
+        lda $D907
+        ldy sd_loop
+        sta (sd_ptr),y
+        iny
+        sty sd_loop
+        bne @loop
+        inc sd_ptr+1
+        dec sd_loop+1
+        bne @loop
+        ; Disable access to RAM
+        lda $D906
+        and #$CD
+        sta $D906
+        lda #$0F
+        sta IND_REG
+        lda #$01
+        sta EXEC_REG
+        rts
+
+        
         .res ($0600-*), $FF
         
 .include "emul.asm"
@@ -168,6 +220,9 @@ sasi_save_bank15:
 .include "cbm/irq.asm"
 .include "cbm/kbd.asm"
 .include "cbm/serial.asm"
+
+disk_banner:
+        .byt "ERROR: SD card not found!", $0D, $0A, $00
 
 .ifdef PRG
 .res 16, $AA

@@ -72,6 +72,10 @@ sd_output:
         rts
 
 sd_read_loop:
+        lda $01
+        pha
+        lda sd_bank
+        sta $01
         lda #2
         sta sd_loop+1
         lda #0
@@ -86,9 +90,15 @@ sd_read_loop:
         inc sd_ptr+1
         dec sd_loop+1
         bne @loop
+        pla
+        sta $01
         rts
                 
 sd_write_loop:
+        lda $01
+        pha
+        lda sd_bank
+        sta $01
         lda #2
         sta sd_loop+1
         lda #0
@@ -103,6 +113,8 @@ sd_write_loop:
         inc sd_ptr+1
         dec sd_loop+1
         bne @loop
+        pla
+        sta $01
         rts
                 
 .ifdef PRG

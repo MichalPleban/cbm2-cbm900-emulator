@@ -114,6 +114,8 @@ kbd_scan:
         sta kbd_buffer,x
         inx
         stx kbd_tail
+        ; Issue IRQ to Z800 if necessary
+        jsr scc_set_irq
         rts
 
 ; Get next character from the buffer

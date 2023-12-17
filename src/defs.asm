@@ -35,6 +35,10 @@ irq_save_x:     .res 1
 irq_save_y:     .res 1
 irq_save_ind:   .res 1
 
+.ifdef DEBUG
+irq_50hz:       .res 1
+.endif
+
 ; NMI handler variables
 nmi_save_a:     .res 1
 nmi_save_x:     .res 1
@@ -61,6 +65,26 @@ io_unimplemented: .res 1
 ; Disk emulation
 disk_request:   .res 1
 disk_unit:      .res 1
+disk_sectors:   .res 1
+disk_irq:       .res 1
+
+; SD card access
+sd_initialized: .res 1
+sd_sector:      .res 4
+sd_bank:        .res 1
+sd_ptr:         .res 2
+sd_bank_flags:  .res 1
+sd_loop:        .res 2
+
+; CIO chip emulation
+timer_irq_enable: .res 1
+timer_irq_pending: .res 1
+timer_irq_vector: .res 1
+
+; SCC chip emulation
+scc_irq_pending: .res 1
+scc_irq_enable: .res 1
+scc_irq_vector: .res 1
 
 scratchpad:     .res 8
 

@@ -5,6 +5,8 @@ emul_init:
         sta $FFFA
         lda #>nmi_handler
         sta $FFFB
+        jsr cio_init
+        jsr scc_init
         jsr disk_init
         rts
         
@@ -26,6 +28,13 @@ nmi_handler:
         sta z8000_addr, y
         dey
         bpl @copy
+
+        ; Is it a I/O read?
+        bit z8000_status
+        bvs @continue
+        jmp irq_handle
+
+@continue:
         
 ; Show debug banner if necessary
 .ifdef DEBUG
@@ -64,10 +73,12 @@ nmi_handler:
         dec z8000_addr+1
         bpl @not_500
         lda z8000_data
-        beq @not_disk
+        beq @disk_clear
         lda #$80
         sta disk_request
-@not_disk:
+        jmp nmi_end
+@disk_clear:
+        jsr disk_clear
         jmp nmi_end
 @not_500:
         jsr undefined
@@ -87,7 +98,17 @@ nmi_end:
         lda z8000_data
         sta (CHIPSET),y
 @notread:        
-        iny
+        
+nmi_finish:
+        pla
+        pha
+        and #$04
+        bne @no_irq
+        cli
+        nop
+        sei
+@no_irq:
+        ldy #3
         lda nmi_save_ind
         sta IND_REG
         ldx nmi_save_x
@@ -199,3 +220,4 @@ hex_chars:
 .include "emul/cio2.asm"
 .include "emul/scc.asm"
 .include "emul/disk.asm"
+.include "emul/irq.asm"

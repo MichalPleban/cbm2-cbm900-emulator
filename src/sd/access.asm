@@ -52,13 +52,7 @@ sd_read:
         
         ; Read data bytes      
 @continue2:
-        lda $01
-        pha
-        lda sd_bank
-        sta $01
         jsr sd_read_loop
-        pla
-        sta $01
        
         ; Read CRC
         SD_WRITE $FF
@@ -111,13 +105,7 @@ sd_write:
         SD_WRITE $FE
 
         ; Send data bytes      
-        lda $01
-        pha
-        lda sd_bank
-        sta $01
         jsr sd_write_loop
-        pla
-        sta $01
 
         ; Send dummy CRC
         SD_WRITE $00
