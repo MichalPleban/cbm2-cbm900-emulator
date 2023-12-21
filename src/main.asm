@@ -99,7 +99,7 @@ init:
         rts
 
 banner:
-        .byt "Commodore C900 emulation layer version 0.4.0, (C) 2023 Michal Pleban", $0D, $0A, $00
+        .byt "Commodore C900 emulation layer version 0.4.1, (C) 2023 Michal Pleban", $0D, $0A, $00
 
 test:
         jsr nmi_handler
@@ -216,10 +216,10 @@ sd_read_bank15:
         .res ($0600-*), $FF
         
 .include "emul.asm"
-.include "cbm/screen.asm"
-.include "cbm/irq.asm"
-.include "cbm/kbd.asm"
-.include "cbm/serial.asm"
+.include "cbm2/screen.asm"
+.include "cbm2/irq.asm"
+.include "cbm2/kbd.asm"
+.include "cbm2/serial.asm"
 
 disk_banner:
         .byt "ERROR: SD card not found!", $0D, $0A, $00

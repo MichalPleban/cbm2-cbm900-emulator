@@ -100,10 +100,12 @@ nmi_end:
 @notread:        
         
 nmi_finish:
+        ; Check if interrupts were enabled when NMI handler was called.
         pla
         pha
         and #$04
         bne @no_irq
+        ; If yes, allow IRQ handler so that it is not starved.
         cli
         nop
         sei

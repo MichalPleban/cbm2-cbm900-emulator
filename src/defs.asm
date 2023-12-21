@@ -36,7 +36,7 @@ irq_save_y:     .res 1
 irq_save_ind:   .res 1
 
 .ifdef DEBUG
-irq_50hz:       .res 1
+irq_delay:      .res 1
 .endif
 
 ; NMI handler variables

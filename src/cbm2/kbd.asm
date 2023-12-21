@@ -1,6 +1,6 @@
 
-REPEAT_FIRST = 25
-REPEAT_NEXT = 2
+REPEAT_FIRST = 40
+REPEAT_NEXT = 3
 
 kbd_init:
         ldy #3
