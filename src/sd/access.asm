@@ -18,7 +18,7 @@ sd_read:
         SD_WRITE $01
        
         ; Wait for 00 response
-        lda #10
+        lda #100
         sta sd_loop+1
         lda #0
         sta sd_loop
@@ -35,7 +35,7 @@ sd_read:
 
 @continue1:
         ; Wait for data token
-        lda #10
+        lda #100
         sta sd_loop+1
         lda #0
         sta sd_loop
@@ -84,7 +84,7 @@ sd_write:
         SD_WRITE $01
        
         ; Wait for 00 response
-        lda #10
+        lda #100
         sta sd_loop+1
         lda #0
         sta sd_loop

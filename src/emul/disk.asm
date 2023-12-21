@@ -92,6 +92,10 @@ disk_handle:
         bne @not_read
         jmp disk_read
 @not_read:
+        cmp #$0A
+        bne @not_write
+        jmp disk_write
+@not_write:
         lda #$00
 disk_finish:
         ldx disk_unit
@@ -145,8 +149,8 @@ disk_finish:
 ; ------------------------------------------------------------------------
         
 disk_read:
-        ; Only floppy
-        lda #$77
+        ; Only floppy for now
+        lda #$70
         ldx disk_unit
         beq @finish
 
@@ -159,6 +163,33 @@ disk_read:
         jsr disk_sector
         jsr disk_translate
         jsr sd_read
+        bcc @ok
+        lda #$A1
+        .byt $2C
+@ok:        
+        lda #$80
+@finish:
+        jmp disk_finish
+
+; ------------------------------------------------------------------------
+; Block write from the disk
+; ------------------------------------------------------------------------
+        
+disk_write:
+        ; Only floppy for now
+        lda #$70
+        ldx disk_unit
+        beq @finish
+
+.ifdef DEBUG
+        lda #<write_banner
+        ldy #>write_banner
+        jsr serial_string        
+.endif
+
+        jsr disk_sector
+        jsr disk_translate
+        jsr sd_write
         bcc @ok
         lda #$A1
         .byt $2C
@@ -328,7 +359,17 @@ sd_read_loop:
         jmp sd_read_bank15
 
 sd_write_loop:
-        rts
+        ldy #3
+        lda #<sd_bank
+        sta scratchpad
+        lda #>sd_bank
+        sta scratchpad+1
+@loop:
+        lda sd_bank,y
+        sta (scratchpad),y
+        dey
+        bpl @loop
+        jmp sd_write_bank15
                 
 .include "../sd/init.asm"
 .include "../sd/access.asm"

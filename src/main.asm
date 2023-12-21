@@ -99,7 +99,7 @@ init:
         rts
 
 banner:
-        .byt "Commodore C900 emulation layer version 0.4.1, (C) 2023 Michal Pleban", $0D, $0A, $00
+        .byt "Commodore C900 emulation layer version 0.4.2, (C) 2023 Michal Pleban", $0D, $0A, $00
 
 test:
         jsr nmi_handler
@@ -212,6 +212,40 @@ sd_read_bank15:
         sta EXEC_REG
         rts
 
+sd_write_bank15:
+        lda #$0F
+        sta EXEC_REG
+        ; Enable access to RAM & XOR address lines if necessary
+        lda $D906
+        ora #$02
+;        ora sd_bank_flags
+        sta $D906
+        lda sd_bank
+        sta IND_REG
+        ; Read bytes in a loop
+        lda #2
+        sta sd_loop+1
+        lda #0
+        sta sd_loop
+@loop:
+        ldy sd_loop
+        lda (sd_ptr),y
+        sta $D907
+        iny
+        sty sd_loop
+        bne @loop
+        inc sd_ptr+1
+        dec sd_loop+1
+        bne @loop
+        ; Disable access to RAM
+        lda $D906
+        and #$CD
+        sta $D906
+        lda #$0F
+        sta IND_REG
+        lda #$01
+        sta EXEC_REG
+        rts
         
         .res ($0600-*), $FF
         
