@@ -190,9 +190,6 @@ sd_read_bank15:
 @loop:
         lda #$FF
         sta $D907
-        nop
-        nop
-        nop
         lda $D907
         ldy sd_loop
         sta (sd_ptr),y

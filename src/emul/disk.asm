@@ -340,8 +340,6 @@ sector_banner4:
 sd_output:
         ldy #7
         sta (CHIPSET),y
-        nop
-        nop
         lda (CHIPSET),y
         rts
 
