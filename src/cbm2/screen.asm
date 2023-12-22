@@ -5,7 +5,7 @@ screen_init:
         lda #$00
         sta screen_charset
         ldx #10
-        lda #$20
+        lda #$60
         jsr crtc_write
         rts
 

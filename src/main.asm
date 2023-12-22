@@ -99,7 +99,7 @@ init:
         rts
 
 banner:
-        .byt "Commodore C900 emulation layer version 0.4.2, (C) 2023 Michal Pleban", $0D, $0A, $00
+        .byt "Commodore C900 emulation layer version 0.4.3, (C) 2023 Michal Pleban", $0D, $0A, $00
 
 test:
         jsr nmi_handler
