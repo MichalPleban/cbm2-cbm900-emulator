@@ -55,8 +55,9 @@ disk_handle:
         bpl @loop2
         
         ; Check which disk drive is being addressed
-        bit sasi_command+12
-        bpl @disk1
+        lda sasi_command+12
+        cmp #$FF
+        bne @disk1
         lda #$00
         .byt $2C
 @disk1:
@@ -149,10 +150,10 @@ disk_finish:
 ; ------------------------------------------------------------------------
         
 disk_read:
-        ; Only floppy for now
+        ; Disable floppy
         lda #$70
         ldx disk_unit
-        beq @finish
+        bne @ok
 
 .ifdef DEBUG
         lda #<read_banner
@@ -176,10 +177,10 @@ disk_read:
 ; ------------------------------------------------------------------------
         
 disk_write:
-        ; Only floppy for now
+        ; Disable floppy
         lda #$70
         ldx disk_unit
-        beq @finish
+        bne @ok
 
 .ifdef DEBUG
         lda #<write_banner
