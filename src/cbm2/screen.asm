@@ -2,11 +2,20 @@
 ; Initialize the screen routines
 screen_init:
         jsr screen_clear
-        lda #$00
+        lda #$80
         sta screen_charset
         ldx #10
         lda #$60
         jsr crtc_write
+        ldx #12
+        jsr crtc_read
+        bit screen_charset
+        bmi @pc_charset
+        and #$EF
+        .byt $2C
+@pc_charset:
+        ora #$10
+        jsr crtc_write            
         rts
 
 ; Clear screen and reset screen pointer to 0,0.
@@ -51,7 +60,7 @@ screen_output:
         rts
 @bksp:
         dec screen_x
-        bpl screen_cursor
+        jmp screen_cursor
 @not_bksp:        
         cmp #$09
         bne @not_tab
@@ -69,7 +78,13 @@ screen_output:
         bne @output
         rts
 @output:
+        bit screen_charset
+        bmi @pc_charset
         lda petscii_table, x
+        jmp @output2
+@pc_charset:
+        lda petscii_table2, x
+@output2:
         ldy screen_x
         sta (SCREEN),y
         
@@ -138,7 +153,10 @@ screen_cursor:
         lda SCREEN+1
         adc #0
         and #$07
-        ora screen_charset
+        bit screen_charset
+        bpl @cbm_charset
+        ora #$10
+@cbm_charset:
         dex
         jsr crtc_write
         rts
@@ -205,3 +223,21 @@ petscii_table:
 	.byt $71, $72, $72, $6d, $6d, $70, $70, $5b, $5b, $7d, $70, $e0, $62, $61, $e1, $e2
 	.byt $64, $64, $64, $64, $64, $64, $64, $64, $64, $64, $64, $64, $64, $64, $64, $64
 	.byt $64, $64, $64, $64, $64, $64, $64, $64, $64, $2a, $2a, $7a, $64, $64, $2a, $60
+
+petscii_table2:
+	.byt $7f, $5f, $5f, $5f, $5f, $5f, $5f, $7c, $7d, $7c, $7d, $5f, $5f, $5f, $5f, $5f
+	.byt $76, $75, $7a, $5f, $5f, $5f, $62, $7a, $77, $78, $76, $75, $5f, $5f, $77, $78
+	.byt $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $2a, $2b, $2c, $2d, $2e, $2f
+	.byt $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $3a, $3b, $3c, $3d, $3e, $3f
+	.byt $00, $41, $42, $43, $44, $45, $46, $47, $48, $49, $4a, $4b, $4c, $4d, $4e, $4f
+	.byt $50, $51, $52, $53, $54, $55, $56, $57, $58, $59, $5a, $1b, $1c, $1d, $1e, $1f
+	.byt $40, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
+	.byt $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $1a, $5b, $5c, $5d, $5e, $77
+	.byt $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f
+	.byt $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $7e, $5f, $5f, $5f
+	.byt $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $75, $76
+	.byt $69, $68, $6a, $65, $6c, $6c, $6c, $6f, $6f, $6c, $65, $6f, $71, $71, $71, $6f
+	.byt $72, $6d, $6e, $6b, $66, $67, $6b, $6b, $72, $70, $6d, $6e, $6b, $66, $67, $6d
+	.byt $6d, $6e, $6e, $72, $72, $70, $70, $67, $67, $71, $70, $60, $62, $61, $64, $63
+	.byt $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f
+	.byt $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $7c, $7c, $79, $5f, $5f, $74, $7f

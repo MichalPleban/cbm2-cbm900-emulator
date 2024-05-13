@@ -17,50 +17,54 @@
         jsr sd_output
 .endmacro
 
+.macro  BANK_SAVE
+        ldx $01
+        stx bank_save
+        ldx $00
+        stx $01
+.endmacro
+
+.macro  BANK_RESTORE
+        ldx bank_save
+        stx $01
+.endmacro
+
 .org $4000
 
-        jsr sd_init
-        sta $5fff
+        lda #$0f
+        sta $00
+        sta $01
+        jsr fat32_init
         bcs @error
-
-@read:
+        lda #<filename
+        ldy #>filename
+        jsr fat32_find_file
+        bcs @error
         lda #$00
+        ldy #$53
+        jsr fat32_scan_file
+        bcs @error
+        lda #$30
         sta sd_sector
-        lda #$00
+        lda #$0
         sta sd_sector+1
         sta sd_sector+2
         sta sd_sector+3
-        lda #$0F
-        sta sd_bank
         lda #$00
-        sta sd_ptr
-        lda #$50
-        sta sd_ptr+1
+        ldy #$53
+        jsr fat32_translate
+        bcs @error
+        jsr fat32_set_buffer
         jsr sd_read
-        sta $5ffe
-        bcs @error
-
-        lda #$02
-        sta sd_sector
-        lda #$00
-        sta sd_sector+1
-        sta sd_sector+2
-        sta sd_sector+3
-        lda #$0F
-        sta sd_bank
-        lda #$00
-        sta sd_ptr
-        lda #$50
-        sta sd_ptr+1
-        jsr sd_write
-        sta $5ffd
-        bcs @error
-
-@error:        
+@error:      
+        sta $5FFF  
         rts
 
+filename:   .byt "DISK4   BIN"
+        
 .include "../sd/init.asm"
 .include "../sd/access.asm"
+.include "../sd/fat32.asm"
         
 sd_output:
         sta $D907

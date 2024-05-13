@@ -196,7 +196,7 @@ normal_table:
         .byt $27        ; '
         .byt 0          ; Cursor down
         .byt '='        ; =
-        .byt '`'        ; Pound
+        .byt '\'        ; Pound
         .byt ']'        ; ]
         .byt $0D        ; Return
         .byt '`'        ; Pi
@@ -211,11 +211,13 @@ normal_table:
         .byt '7'        ; Numeric 7
         .byt '4'        ; Numeric 4
         .byt '1'        ; Numeric 1
+        .byt '0'        ; Numeric 0
         .byt 0          ; Rvs/Off
         .byt 0          ; CE
         .byt '8'        ; Numeric 8
         .byt '5'        ; Numeric 5
         .byt '2'        ; Numeric 2
+        .byt '.'        ; Numeric .
         .byt 0          ; Norm/Graph
         .byt '*'        ; Numeric *
         .byt '9'        ; Numeric 9
@@ -307,11 +309,13 @@ shift_table:
         .byt '7'        ; Numeric 7
         .byt '4'        ; Numeric 4
         .byt '1'        ; Numeric 1
+        .byt '0'        ; Numeric 0
         .byt 0          ; Rvs/Off
         .byt 0          ; CE
         .byt '8'        ; Numeric 8
         .byt '5'        ; Numeric 5
         .byt '2'        ; Numeric 2
+        .byt '.'        ; Numeric .
         .byt 0          ; Norm/Graph
         .byt '*'        ; Numeric *
         .byt '9'        ; Numeric 9
@@ -403,11 +407,13 @@ ctrl_table:
         .byt 0          ; Numeric 7
         .byt 0          ; Numeric 4
         .byt 0          ; Numeric 1
+        .byt 0          ; Numeric 0
         .byt 0          ; Rvs/Off
         .byt 0          ; CE
         .byt 0          ; Numeric 8
         .byt 0          ; Numeric 5
         .byt 0          ; Numeric 2
+        .byt 0          ; Numeric .
         .byt 0          ; Norm/Graph
         .byt 0          ; Numeric *
         .byt 0          ; Numeric 9
