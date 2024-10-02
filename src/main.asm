@@ -4,7 +4,10 @@
 .code
 
 .ifdef PRG
-.word $0400
+.include "cbm2/stub.asm"
+.res ($0400-*), $FF
+.else
+.org $0400
 .endif
 
 .org $0400

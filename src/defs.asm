@@ -7,6 +7,8 @@ kbd_buffer      = $F000
 EXEC_REG:       .res 1
 IND_REG:        .res 1
 
+                .res 1
+
 ; Vectors to access I/O chips
 SCREEN:         .res 2
 CRTC:           .res 2
