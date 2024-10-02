@@ -10,6 +10,14 @@ HD_START = 43312
         lda value
         jsr sd_output
 .endmacro
+.macro  BANK_SAVE
+        nop
+.endmacro
+.macro  BANK_RESTORE
+        nop
+.endmacro
+
+fat32_buffer = $FD00
 
 disk_init:
         lda #$00
@@ -426,10 +434,11 @@ disk_errors:
         .byt $32, "Partition is not FAT32", $00
         .byt $33, "FAT32 boot sector not found", $00
         .byt $41, "File not found", $00
-        .byt $51, "File mapping error", $00
+        .byt $51, "File is too fragmented", $00
         .byt $52, "Seek past file end", $00
         .byt $00, "Unknown error", $00
 
                 
 .include "../sd/init.asm"
 .include "../sd/access.asm"
+.include "../sd/fat32.asm"

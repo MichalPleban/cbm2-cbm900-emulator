@@ -20,7 +20,7 @@ start:
         lda #$0F
         sta IND_REG
         
-        jsr init
+        jsr machine_init
         
         ; Pull /RESET low
         ldy #6
@@ -32,11 +32,11 @@ start:
         lda #<banner
         ldy #>banner
         jsr screen_string
-        jsr disk_init
-        php
         jsr kbd_init
         jsr serial_init
         jsr emul_init
+        jsr fat32_init
+        php
         jsr irq_init
         plp
         bcs @disk_error
@@ -51,7 +51,7 @@ start:
         ; Main loop
 @loop:
         jsr disk_handle
-        jmp @loop  
+        jmp @loop
 
 @disk_error:
         jsr disk_error
@@ -64,54 +64,8 @@ start:
         jmp @disk_loop
 
         
-init:
-        ; Initialize chip pointers
-        lda #$D0
-        sta SCREEN+1
-        lda #$00
-        sta SCREEN
-        ldx #$D8
-        stx CRTC+1
-        sta CRTC
-        inx
-        stx CHIPSET+1
-        sta CHIPSET
-        inx
-        inx
-        stx SID+1
-        sta SID
-        inx
-        stx CIA+1
-        sta CIA
-        inx
-        stx ACIA+1
-        sta ACIA
-        inx
-        stx TPI1+1
-        sta TPI1
-        inx
-        stx TPI2+1
-        sta TPI2
-        
-        ; Copy routines to bank 15        
-        ldy #$00
-        sty scratchpad
-        lda #$05
-        sta scratchpad+1
-@loop:
-        lda bank15_0500, y
-        sta (scratchpad), y
-        iny
-        bne @loop
-
-        rts
-
 banner:
         .byt "Commodore C900 emulation layer version 0.4.4, (C) Michal Pleban", $0D, $0A, $00
-
-test:
-        jsr nmi_handler
-        rts
 
 .include "trace.asm"
 
@@ -184,12 +138,20 @@ sd_read_bank15:
         lda #$0F
         sta EXEC_REG
         ; Enable access to RAM & XOR address lines if necessary
+        bit sd_bank
+        bmi @computer_ram
         lda $D906
         ora #$02
 ;        ora sd_bank_flags
         sta $D906
+@computer_ram:
         lda sd_bank
         sta IND_REG
+        sta $07FF
+        lda sd_ptr
+        sta $07FD
+        lda sd_ptr+1
+        sta $07FE
         ; Read bytes in a loop
         lda #2
         sta sd_loop+1
@@ -221,10 +183,13 @@ sd_write_bank15:
         lda #$0F
         sta EXEC_REG
         ; Enable access to RAM & XOR address lines if necessary
+        bit sd_bank
+        bmi @computer_ram
         lda $D906
         ora #$02
 ;        ora sd_bank_flags
         sta $D906
+@computer_ram:
         lda sd_bank
         sta IND_REG
         ; Read bytes in a loop
@@ -255,6 +220,7 @@ sd_write_bank15:
         .res ($0600-*), $FF
         
 .include "emul.asm"
+.include "cbm2/init.asm"
 .include "cbm2/screen.asm"
 .include "cbm2/irq.asm"
 .include "cbm2/kbd.asm"

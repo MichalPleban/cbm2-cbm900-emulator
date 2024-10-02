@@ -88,6 +88,11 @@ scc_irq_pending: .res 1
 scc_irq_enable: .res 1
 scc_irq_vector: .res 1
 
+; FAT32 variables
+fat32_cluster_sectors:  .res 1
+fat32_fat_copies:   .res 1
+fat32_sector_number:    .res 1
+
 scratchpad:     .res 8
 
 .org $0200
@@ -97,3 +102,24 @@ cio_registers:  .res $40
 cio2_registers: .res $40
 scc_registers:  .res $20
 sasi_command:   .res $20
+
+.org $0300
+
+; FAT32 variables
+fat32_pointers:     .res 32
+
+PARTITION_START     = 0
+RESERVED_SECTORS    = 4
+FAT_SECTORS         = 8
+ROOT_CLUSTER        = 16
+FAT_START           = 20
+DATA_START          = 24
+
+FILE_CLUSTER        = 0
+FILE_SIZE           = 4
+
+CURRENT_SECTOR      = 8
+CURRENT_CLUSTER     = 12
+
+TEMP_CLUSTER        = 0
+FILE_SECTOR         = 28

@@ -526,7 +526,8 @@ fat32_next_cluster:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 fat32_set_buffer:
-        lda $01
+        lda EXEC_REG
+        ora #$80
         sta sd_bank
         lda #<fat32_buffer
         sta sd_ptr

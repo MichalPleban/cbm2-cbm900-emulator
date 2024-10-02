@@ -3,7 +3,7 @@ ROM = bin/emulate.bin bin/emulate.prg
 STUB = bin/stub.bin bin/stub.prg
 SD = bin/sd.bin bin/sd.prg
 SRC_MAIN = src/main.asm src/defs.asm src/trace.asm src/emul.asm
-SRC_CBM = src/cbm2/screen.asm src/cbm2/irq.asm src/cbm2/kbd.asm src/cbm2/serial.asm src/cbm2/stub.asm
+SRC_CBM = src/cbm2/init.asm src/cbm2/screen.asm src/cbm2/irq.asm src/cbm2/kbd.asm src/cbm2/serial.asm src/cbm2/stub.asm
 SRC_EMUL = src/emul/scc.asm src/emul/cio.asm src/emul/cio2.asm src/emul/disk.asm src/emul/irq.asm
 SRC_SD = src/sd/init.asm src/sd/access.asm src/sd/fat32.asm
 SRC = $(SRC_MAIN) $(SRC_CBM) $(SRC_EMUL) $(SRC_SD)
@@ -17,7 +17,7 @@ bin/emulate.bin: $(SRC)
 	rm src/main.o
 
 bin/emulate.prg: $(SRC)
-	ca65 src/main.asm -DPRG -DDEBUG_
+	ca65 src/main.asm -DPRG -DDEBUG
 	ld65 src/main.o -C src/main.cfg -o bin/emulate.prg
 	rm src/main.o
 
