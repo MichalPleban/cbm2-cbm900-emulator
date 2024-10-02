@@ -222,7 +222,7 @@ fat32_find_file:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Scans the FAT for file fragments (max 31)
 ; Input:
-;   A:Y - pointer to the list of file fragments
+;   A:Y - pointer to the buffer for the list of file fragments
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
         
 fat32_scan_file:
@@ -274,7 +274,7 @@ fat32_scan_file:
         adc #0
         sta scratchpad+1
         
-        ; Add numbbr of sector in the cluster to current position
+        ; Add number of sector in the cluster to current position
 @inc_position:
         lda fat32_cluster_sectors
         clc
@@ -343,7 +343,7 @@ fat32_scan_file:
         rts       
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Translates logocal file sector to physical disk sector
+; Translates logical file sector to physical disk sector
 ; Input:
 ;   A:Y - pointer to the list of file fragments
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

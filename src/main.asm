@@ -32,12 +32,12 @@ start:
         lda #<banner
         ldy #>banner
         jsr screen_string
-        jsr disk_init
-        bcs @disk_error
         jsr serial_init
         jsr kbd_init
         jsr emul_init
         jsr irq_init
+        jsr disk_init
+        bcs @disk_error
         cli
         
         ; Pull /RESET high
@@ -52,9 +52,12 @@ start:
         jmp @loop  
 
 @disk_error:
-        lda #<disk_banner
-        ldy #>disk_banner
+        jsr disk_error
         jsr screen_string
+        lda #$0A
+        jsr screen_output
+        lda #$0D
+        jsr screen_output
 @disk_loop:        
         jmp @disk_loop
 
@@ -103,10 +106,6 @@ init:
 
 banner:
         .byt "Commodore C900 emulation layer version 0.4.4, (C) Michal Pleban", $0D, $0A, $00
-
-test:
-        jsr nmi_handler
-        rts
 
 .include "trace.asm"
 
@@ -254,9 +253,6 @@ sd_write_bank15:
 .include "cbm2/irq.asm"
 .include "cbm2/kbd.asm"
 .include "cbm2/serial.asm"
-
-disk_banner:
-        .byt "ERROR: SD card not found!", $0D, $0A, $00
 
 .ifdef PRG
 .res 16, $AA

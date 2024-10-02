@@ -15,9 +15,9 @@ fat32_sector_number:    .res 1
 
 bank_save:      .res 1
 
-fat32_buffer = $5000
+fat32_buffer = $FD00
 
-.org $5200
+.org $FF00
 
 fat32_pointers:     .res 32
 PARTITION_START     = 0

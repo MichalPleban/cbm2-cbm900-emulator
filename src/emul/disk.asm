@@ -10,6 +10,14 @@ HD_START = 43312
         lda value
         jsr sd_output
 .endmacro
+.macro  BANK_SAVE
+        nop
+.endmacro
+.macro  BANK_RESTORE
+        nop
+.endmacro
+
+fat32_buffer = $FD00
 
 disk_init:
         lda #$00
@@ -369,6 +377,68 @@ sd_write_loop:
         dey
         bpl @loop
         jmp sd_write_bank15
+
+; ------------------------------------------------------------------------
+; Display disk error message
+; Input:
+;       A - error number
+; Output:
+;       A:Y - pointer to error text
+;       X - destroyed
+; ------------------------------------------------------------------------
+
+disk_error:
+        sta scratchpad
+        ldx #0
+        lda #<disk_errors
+        sta screen_ptr
+        lda #>disk_errors
+        sta screen_ptr+1
+@loop:
+        lda (screen_ptr,x)
+        beq @found
+        cmp scratchpad
+        beq @found
+@loop2:
+        inc screen_ptr
+        bne @notzero
+        inc screen_ptr+1
+@notzero:
+        lda (screen_ptr,x)
+        bne @loop2
+        inc screen_ptr
+        bne @loop
+        inc screen_ptr+1
+        bne @loop
+@found:
+        inc screen_ptr
+        bne @notzero2
+        inc screen_ptr+1
+@notzero2:
+        lda screen_ptr
+        ldy screen_ptr+1
+        rts
                 
+disk_errors:
+        .byt $01, "SD card not found", $00
+        .byt $02, "SD card init error", $00
+        .byt $03, "SD card init error", $00
+        .byt $04, "SD card is not SDHC", $00
+        .byt $05, "SD card init error", $00
+        .byt $11, "Sector read error", $00
+        .byt $12, "Sector read error", $00
+        .byt $21, "Sector write error", $00
+        .byt $22, "Sector write error", $00
+        .byt $23, "Sector write error", $00
+        .byt $31, "Master boot record not found", $00
+        .byt $32, "Partition is not FAT32", $00
+        .byt $33, "FAT32 boot sector not found", $00
+        .byt $41, "File not found", $00
+        .byt $51, "File mapping error", $00
+        .byt $52, "Seek past file end", $00
+        .byt $00, "Unknown error", $00
+        
 .include "../sd/init.asm"
 .include "../sd/access.asm"
+.include "../sd/fat32.asm"
+
