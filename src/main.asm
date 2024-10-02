@@ -33,11 +33,13 @@ start:
         ldy #>banner
         jsr screen_string
         jsr disk_init
-        bcs @disk_error
-        jsr serial_init
+        php
         jsr kbd_init
+        jsr serial_init
         jsr emul_init
         jsr irq_init
+        plp
+        bcs @disk_error
         cli
         
         ; Pull /RESET high
@@ -52,9 +54,12 @@ start:
         jmp @loop  
 
 @disk_error:
-        lda #<disk_banner
-        ldy #>disk_banner
+        jsr disk_error
         jsr screen_string
+        lda #$0A
+        jsr screen_output
+        lda #$0D
+        jsr screen_output
 @disk_loop:        
         jmp @disk_loop
 

@@ -17,7 +17,7 @@ bin/emulate.bin: $(SRC)
 	rm src/main.o
 
 bin/emulate.prg: $(SRC)
-	ca65 src/main.asm -DPRG -DDEBUG
+	ca65 src/main.asm -DPRG -DDEBUG_
 	ld65 src/main.o -C src/main.cfg -o bin/emulate.prg
 	rm src/main.o
 
