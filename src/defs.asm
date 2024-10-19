@@ -1,6 +1,4 @@
 
-kbd_buffer      = $F000
-
 .data
 .org $0000
 
@@ -24,6 +22,7 @@ screen_x:       .res 1
 screen_y:       .res 1
 screen_ptr:     .res 2
 screen_charset: .res 1
+screen_invert:  .res 1
 
 ; Z8000 state
 z8000_addr:     .res 2
@@ -56,6 +55,7 @@ kbd_shift:      .res 1
 kbd_repeat:     .res 1
 kbd_head:       .res 1
 kbd_tail:       .res 1
+kbd_stop:       .res 1
 
 ; RS-232 serial port
 serial_ptr:     .res 2
@@ -92,7 +92,14 @@ scc_irq_vector: .res 1
 fat32_cluster_sectors:  .res 1
 fat32_fat_copies:   .res 1
 fat32_sector_number:    .res 1
+fat32_ptr_1:    .res 2
+fat32_ptr_2:    .res 2
 
+; Menu
+menu_visible:   .res 1
+menu_ptr_save:  .res 4
+
+; Temporary variables
 scratchpad:     .res 8
 
 .org $0200

@@ -1,8 +1,13 @@
 
+screen_save = $F000
+
 ; Initialize the screen routines
 screen_init:
         jsr screen_clear
-        lda #$80
+        lda #$00
+        sta screen_invert
+        sta menu_visible
+        lda #$00
         sta screen_charset
         ldx #10
         lda #$60
@@ -85,6 +90,7 @@ screen_output:
 @pc_charset:
         lda petscii_table2, x
 @output2:
+        ora screen_invert
         ldy screen_x
         sta (SCREEN),y
         
@@ -241,3 +247,38 @@ petscii_table2:
 	.byt $6d, $6e, $6e, $72, $72, $70, $70, $67, $67, $71, $70, $60, $62, $61, $64, $63
 	.byt $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f
 	.byt $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $7c, $7c, $79, $5f, $5f, $74, $7f
+
+menu_show:
+        lda SCREEN
+        sta menu_ptr_save
+        lda SCREEN+1
+        sta menu_ptr_save+1
+        lda screen_x
+        sta menu_ptr_save+2
+        lda screen_y
+        sta menu_ptr_save+3
+        
+        ; Save the current screen
+        lda #<screen_save
+        sta scratchpad
+        lda #>screen_save
+        sta scratchpad+1
+        lda #$D0
+        sta scratchpad+3
+        lda #$00
+        sta scratchpad+2
+        tax
+        tay
+@loop1:        
+        lda (scratchpad+2),y
+        sta (scratchpad,x)
+        inc scratchpad
+        inc scratchpad+2
+        bne @loop1
+        inc scratchpad+1
+        inc scratchpad+3
+        lda scratchpad+3
+        cmp #$D8
+        bne @loop1
+        
+        rts

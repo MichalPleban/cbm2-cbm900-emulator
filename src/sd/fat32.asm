@@ -5,7 +5,6 @@ fat32_init:
         rts
 @init_ok:
 
-        BANK_SAVE
 fat32_init_step1:
         ; Step 1 - read MBR and check partition table
         jsr fat32_set_buffer
@@ -24,6 +23,7 @@ fat32_init_error:
         sec
         rts
 firstbyte_ok:
+        BANK_SAVE
         lda fat32_buffer+511
         cmp #$AA
         beq @secondbyte_ok
@@ -127,8 +127,8 @@ fat32_init_step4:
         
 fat32_find_file:
         BANK_SAVE
-        sta scratchpad
-        sty scratchpad+1
+        sta fat32_ptr_1
+        sty fat32_ptr_1+1
         ldx #ROOT_CLUSTER
         ldy #CURRENT_CLUSTER
         jsr int32_copy
@@ -145,36 +145,36 @@ fat32_find_file:
 @load_sector:        
         jsr fat32_load_sector
         lda #<fat32_buffer
-        sta scratchpad+2
+        sta fat32_ptr_2
         lda #>fat32_buffer
-        sta scratchpad+3
+        sta fat32_ptr_2+1
         
         ; Search one directory entry
         ldy #10
 @filename_loop:        
-        lda (scratchpad),y
-        cmp (scratchpad+2),y
+        lda (fat32_ptr_1),y
+        cmp (fat32_ptr_2),y
         bne @filename_no_match
         dey
         bpl @filename_loop
         
         ; File is found!
         ldy #$14
-        lda (scratchpad+2),y
+        lda (fat32_ptr_2),y
         sta fat32_pointers+FILE_CLUSTER+2
         iny
-        lda (scratchpad+2),y
+        lda (fat32_ptr_2),y
         sta fat32_pointers+FILE_CLUSTER+3
         ldy #$1A
-        lda (scratchpad+2),y
+        lda (fat32_ptr_2),y
         sta fat32_pointers+FILE_CLUSTER
         iny
-        lda (scratchpad+2),y
+        lda (fat32_ptr_2),y
         sta fat32_pointers+FILE_CLUSTER+1
         ldx #0
 @size_loop:        
         iny
-        lda (scratchpad+2),y
+        lda (fat32_ptr_2),y
         sta fat32_pointers+FILE_SIZE,x
         inx
         cpx #4
@@ -184,12 +184,12 @@ fat32_find_file:
         ; Go to next directory entry
 @filename_no_match:
         clc
-        lda scratchpad+2
+        lda fat32_ptr_2
         adc #$20
-        sta scratchpad+2
-        lda scratchpad+3
+        sta fat32_ptr_2
+        lda fat32_ptr_2+1
         adc #$00
-        sta scratchpad+3
+        sta fat32_ptr_2+1
         cmp #>fat32_buffer+2
         bne @filename_loop
         
@@ -227,54 +227,54 @@ fat32_find_file:
         
 fat32_scan_file:
         BANK_SAVE
-        sta scratchpad
-        sty scratchpad+1
+        sta fat32_ptr_1
+        sty fat32_ptr_1+1
         lda #0
         sta fat32_pointers+FILE_SECTOR
         sta fat32_pointers+FILE_SECTOR+1
         sta fat32_pointers+FILE_SECTOR+2
         sta fat32_pointers+FILE_SECTOR+3
         tay
-        sta (scratchpad),y
+        sta (fat32_ptr_1),y
         iny
-        sta (scratchpad),y
+        sta (fat32_ptr_1),y
         iny
-        sta (scratchpad),y
+        sta (fat32_ptr_1),y
         iny
-        sta (scratchpad),y
-        lda scratchpad
+        sta (fat32_ptr_1),y
+        lda fat32_ptr_1
         clc
         adc #4
-        sta scratchpad
-        lda scratchpad+1
+        sta fat32_ptr_1
+        lda fat32_ptr_1+1
         adc #0
-        sta scratchpad+1
+        sta fat32_ptr_1+1
 
         lda #30
-        sta scratchpad+4
-        
+        sta fat32_sector_number
+
 @calc_sector:
         ldx #FILE_CLUSTER
         ldy #CURRENT_SECTOR
         jsr fat32_cluster_to_sector
-        lda scratchpad+4
+        lda fat32_sector_number
         
         ; Copy current sector to the fragment table
         ldy #3
 @copy_sector:
         lda fat32_pointers+CURRENT_SECTOR,y
-        sta (scratchpad),y
+        sta (fat32_ptr_1),y
         dey
         bpl @copy_sector
-        lda scratchpad
+        lda fat32_ptr_1
         clc
         adc #4
-        sta scratchpad
-        lda scratchpad+1
+        sta fat32_ptr_1
+        lda fat32_ptr_1+1
         adc #0
-        sta scratchpad+1
+        sta fat32_ptr_1+1
         
-        ; Add numbbr of sector in the cluster to current position
+        ; Add number of sectors in the cluster to current position
 @inc_position:
         lda fat32_cluster_sectors
         clc
@@ -306,20 +306,20 @@ fat32_scan_file:
         ldy #3
 @copy_position:
         lda fat32_pointers+FILE_SECTOR,y
-        sta (scratchpad),y
+        sta (fat32_ptr_1),y
         dey
         bpl @copy_position
-        lda scratchpad
+        lda fat32_ptr_1
         clc
         adc #4
-        sta scratchpad
-        lda scratchpad+1
+        sta fat32_ptr_1
+        lda fat32_ptr_1+1
         adc #0
-        sta scratchpad+1
+        sta fat32_ptr_1+1
                 
         lda fat32_pointers+FILE_CLUSTER+3
         bne @file_end
-        dec scratchpad+4
+        dec fat32_sector_number
              
         bpl @calc_sector
         lda #$51
@@ -331,10 +331,10 @@ fat32_scan_file:
         ldy #7
         lda #$80
 @copy_end:
-        sta (scratchpad),y
+        sta (fat32_ptr_1),y
         dey
         bpl @copy_end
-
+        
 @exit:
         lda #$00
         clc
@@ -526,7 +526,7 @@ fat32_next_cluster:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 fat32_set_buffer:
-        lda EXEC_REG
+        lda $00
         ora #$80
         sta sd_bank
         lda #<fat32_buffer
@@ -550,7 +550,10 @@ fat32_load_sector:
         lda fat32_pointers+3,y
         sta sd_sector+3
         jsr fat32_set_buffer
-        jmp sd_read
+        BANK_RESTORE
+        jsr sd_read
+        BANK_SAVE
+        rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Copies an int32 number

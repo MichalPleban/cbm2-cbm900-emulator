@@ -11,13 +11,17 @@ HD_START = 43312
         jsr sd_output
 .endmacro
 .macro  BANK_SAVE
-        nop
+        ldx $00
+        stx $01
 .endmacro
 .macro  BANK_RESTORE
-        nop
+        ldx #$0F
+        stx $01
 .endmacro
 
-fat32_buffer = $FD00
+fat32_buffer = $FC00
+hd_mapping = $FB00
+fd_mapping = $FA00
 
 disk_init:
         lda #$00
@@ -282,17 +286,20 @@ disk_translate:
         sta sd_sector+2
         jmp @end
 @hdd:
-        clc
-        lda sd_sector
-        adc #<HD_START
-        sta sd_sector
-        lda sd_sector+1
-        adc #>HD_START
-        sta sd_sector+1
-        lda sd_sector+2
-        adc #0
-        sta sd_sector+2
-        
+        lda #<hd_mapping
+        ldy #>hd_mapping
+        jsr fat32_translate
+;        clc
+;        lda sd_sector
+;        adc #<HD_START
+;        sta sd_sector
+;        lda sd_sector+1
+;        adc #>HD_START
+;        sta sd_sector+1
+;        lda sd_sector+2
+;        adc #0
+;        sta sd_sector+2
+       
 @end:
 .ifdef DEBUG
         lda #<sector_banner4
@@ -320,6 +327,95 @@ disk_clear:
         lda #$00
         sta disk_irq
         jmp irq_issue
+
+; ------------------------------------------------------------------------
+; Print 8.3 filename to the screen
+;     A:Y - pointer ot the filename
+; ------------------------------------------------------------------------
+
+filename_print:
+        sta scratchpad
+        sta scratchpad+2
+        sty scratchpad+1
+        sty scratchpad+3
+        
+        lda scratchpad+2
+        clc
+        adc #7
+        sta scratchpad+2
+        lda scratchpad+3
+        adc #0
+        sta scratchpad+3
+
+@find_spaces:
+        ldx #0
+        lda (scratchpad+2,x)
+        cmp #$20
+        bne @not_space
+        lda scratchpad+2
+        sec
+        sbc #1
+        sta scratchpad+2
+        lda scratchpad+3
+        sbc #0
+        sta scratchpad+3
+        lda scratchpad+2
+        cmp scratchpad
+        bne @find_spaces
+        
+@not_space:
+        lda scratchpad
+        sta scratchpad+4
+        lda scratchpad+1
+        sta scratchpad+5
+@print_name:
+        ldx #0
+        lda (scratchpad,x)
+        jsr screen_output
+        lda scratchpad
+        cmp scratchpad+2
+        beq @name_end
+        clc
+        adc #1
+        sta scratchpad
+        lda scratchpad+1
+        adc #0
+        sta scratchpad+1
+        bne @print_name
+        
+@name_end:
+        lda #$2E
+        jsr screen_output      
+        
+        lda scratchpad+4
+        clc
+        adc #8
+        sta scratchpad+4
+        lda scratchpad+5
+        adc #0
+        sta scratchpad+5
+        ldx #0
+        lda (scratchpad+4,x)
+        jsr screen_output
+        inc scratchpad+4
+        bne @second_char
+        inc scratchpad+5
+@second_char:        
+        ldx #0
+        lda (scratchpad+4,x)
+        jsr screen_output
+        inc scratchpad+4
+        bne @third_char
+        inc scratchpad+5
+@third_char:        
+        ldx #0
+        lda (scratchpad+4,x)
+        jsr screen_output
+        
+        rts        
+        
+
+
 
 .ifdef DEBUG
 disk_banner1:

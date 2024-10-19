@@ -36,6 +36,13 @@ irq_init:
         sta (TPI1),y
         rts
 
+irq_restart:
+        ldy #13
+        lda #$81
+        sta (CIA),y
+        lda (CIA),y
+        rts
+        
 irq_handler:
 
         ; Save registers

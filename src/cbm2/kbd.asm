@@ -1,4 +1,6 @@
 
+kbd_buffer      = $FE00
+
 REPEAT_FIRST = 40
 REPEAT_NEXT = 3
 
@@ -14,6 +16,7 @@ kbd_init:
         sta (TPI2),y
         sta kbd_head
         sta kbd_tail
+        sta kbd_stop
         rts
 
 kbd_scan:
@@ -56,6 +59,7 @@ kbd_scan:
         stx kbd_last
 @end:
         rts
+
 @key_pressed:
         cpx #4
         bne @not_shift
@@ -80,6 +84,7 @@ kbd_scan:
 @not_alt:
         stx kbd_current
         bne @continue
+
 @finished:
         cpx kbd_last
         bne @new_key
@@ -89,6 +94,11 @@ kbd_scan:
         sta kbd_repeat
         bne @output
 @new_key:
+        cpx #90
+        bne @not_stop
+        lda #$80
+        sta kbd_stop
+@not_stop:
         stx kbd_last
         lda #REPEAT_FIRST
         sta kbd_repeat
@@ -114,7 +124,7 @@ kbd_scan:
         sta kbd_buffer,x
         inx
         stx kbd_tail
-        ; Issue IRQ to Z800 if necessary
+        ; Issue IRQ to Z8000 if necessary
         jsr scc_set_irq
         rts
 

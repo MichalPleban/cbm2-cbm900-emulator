@@ -35,11 +35,9 @@ start:
         jsr kbd_init
         jsr serial_init
         jsr emul_init
-        jsr fat32_init
-        php
         jsr irq_init
-        plp
-        bcs @disk_error
+        jsr load_files
+        jsr irq_restart
         cli
         
         ; Pull /RESET high
@@ -53,19 +51,10 @@ start:
         jsr disk_handle
         jmp @loop
 
-@disk_error:
-        jsr disk_error
-        jsr screen_string
-        lda #$0A
-        jsr screen_output
-        lda #$0D
-        jsr screen_output
-@disk_loop:        
-        jmp @disk_loop
 
         
 banner:
-        .byt "Commodore C900 emulation layer version 0.4.4, (C) Michal Pleban", $0D, $0A, $00
+        .byt "Commodore C900 emulation layer version 0.4.4, (C) Michal Pleban", $0D, $0A, $0D, $0A, 0
 
 .include "trace.asm"
 
@@ -226,8 +215,84 @@ sd_write_bank15:
 .include "cbm2/kbd.asm"
 .include "cbm2/serial.asm"
 
-disk_banner:
-        .byt "ERROR: SD card not found!", $0D, $0A, $00
+load_files:
+        lda #<banner_sd
+        ldy #>banner_sd
+        jsr screen_string
+        jsr fat32_init
+        bcs @disk_error
+        lda #<msg_ok
+        ldy #>msg_ok
+        jsr screen_string
+
+        lda #<banner_hd
+        ldy #>banner_hd
+        jsr screen_string
+        lda #<hd_filename
+        ldy #>hd_filename
+        jsr filename_print
+        lda #<msg_ellipsis
+        ldy #>msg_ellipsis
+        jsr screen_string
+        lda #<hd_filename
+        ldy #>hd_filename
+        jsr fat32_find_file
+        bcs @disk_error
+        lda #<hd_mapping
+        ldy #>hd_mapping
+        jsr fat32_scan_file
+        bcs @disk_error
+        lda #<msg_ok
+        ldy #>msg_ok
+        jsr screen_string
+        
+        rts
+        
+@disk_error:
+        jsr disk_error
+        jsr screen_string
+        lda #$0D
+        jsr screen_output
+        lda #$0A
+        jsr screen_output
+        lda #<banner_retry
+        ldy #>banner_retry
+        jsr screen_string
+        jsr irq_restart
+        cli
+
+@disk_loop:        
+        lda kbd_stop
+        bmi @stop
+        jsr kbd_fetch
+        cmp #$0D
+        bne @disk_loop
+        sei
+        lda #$0D
+        jsr screen_output
+        lda #$0A
+        jsr screen_output
+        jmp load_files
+
+@stop:
+        lda #$00
+        sta kbd_stop
+        sei
+        jsr menu_show
+        lda #$0D
+        jsr screen_output
+        lda #$0A
+        jsr screen_output
+        jmp load_files
+        
+        
+banner_sd:      .byt "Initializing SD card... ", 0
+banner_hd:      .byt "Loading hard disk image ", 0
+msg_ellipsis:   .byt "... ", 0
+msg_ok:         .byt "OK", $0D, $0A, 0
+banner_retry:   .byt "Press Enter to retry.", $0D, $0A, 0
+
+hd_filename:    .byt "HDD     BIN",0
 
 .ifdef PRG
 .res 16, $AA
