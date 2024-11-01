@@ -144,75 +144,75 @@ kbd_fetch:
         rts        
         
 normal_table:
-        .byt 0          ; F1
+        .byt $C0        ; F1
         .byt $27        ; Esc
         .byt $09        ; Tab
         .byt 0
         .byt 0          ; Shift
         .byt 0          ; Ctrl
-        .byt 0          ; F2
+        .byt $C1        ; F2
         .byt '1'        ; 1
         .byt 'q'        ; Q
         .byt 'a'        ; A
         .byt 'z'        ; Z
         .byt 0
-        .byt 0          ; F3
+        .byt $C2        ; F3
         .byt '2'        ; 2
         .byt 'w'        ; W
         .byt 's'        ; S
         .byt 'x'        ; X
         .byt 'c'        ; C
-        .byt 0          ; F4
+        .byt $C3        ; F4
         .byt '3'        ; 3
         .byt 'e'        ; E
         .byt 'd'        ; D
         .byt 'f'        ; F
         .byt 'v'        ; V
-        .byt 0          ; F5
+        .byt $C4        ; F5
         .byt '4'        ; 4
         .byt 'r'        ; R
         .byt 't'        ; T
         .byt 'g'        ; G
         .byt 'b'        ; B
-        .byt 0          ; F6
+        .byt $C5        ; F6
         .byt '5'        ; 5
         .byt '6'        ; 6
         .byt 'y'        ; Y
         .byt 'h'        ; H
         .byt 'n'        ; N
-        .byt 0          ; F7
+        .byt $C6        ; F7
         .byt '7'        ; 7
         .byt 'u'        ; U
         .byt 'j'        ; J
         .byt 'm'        ; M
         .byt ' '        ; Space
-        .byt 0          ; F8
+        .byt $C7        ; F8
         .byt '8'        ; 8
         .byt 'i'        ; I
         .byt 'k'        ; K
         .byt ','        ; ,
         .byt '.'        ; .
-        .byt 0          ; F9
+        .byt $C8        ; F9
         .byt '9'        ; 9
         .byt 'o'        ; O
         .byt 'l'        ; L
         .byt ';'        ; ;
         .byt '/'        ; /
-        .byt 0          ; F10
+        .byt $C9        ; F10
         .byt '0'        ; 0
         .byt '-'        ; -
         .byt 'p'        ; P
         .byt '['        ; [
         .byt $27        ; '
-        .byt 0          ; Cursor down
+        .byt $83        ; Cursor down
         .byt '='        ; =
         .byt '\'        ; Pound
         .byt ']'        ; ]
         .byt $0D        ; Return
         .byt '`'        ; Pi
-        .byt 0          ; Cursor up
-        .byt 0          ; Cursor left
-        .byt 0          ; Cursor right
+        .byt $80        ; Cursor up
+        .byt $81        ; Cursor left
+        .byt $82        ; Cursor right
         .byt $08        ; Ins/Del
         .byt 0          ; C=
         .byt 0
@@ -223,7 +223,7 @@ normal_table:
         .byt '1'        ; Numeric 1
         .byt '0'        ; Numeric 0
         .byt 0          ; Rvs/Off
-        .byt 0          ; CE
+        .byt $84        ; CE
         .byt '8'        ; Numeric 8
         .byt '5'        ; Numeric 5
         .byt '2'        ; Numeric 2
@@ -242,75 +242,75 @@ normal_table:
         .byt 0
 
 shift_table:
-        .byt 0          ; F1
+        .byt $C0        ; F1
         .byt $27        ; Esc
         .byt $09        ; Tab
         .byt 0
         .byt 0          ; Shift
         .byt 0          ; Ctrl
-        .byt 0          ; F2
+        .byt $C1        ; F2
         .byt '!'        ; 1
         .byt 'Q'        ; Q
         .byt 'A'        ; A
         .byt 'Z'        ; Z
         .byt 0
-        .byt 0          ; F3
+        .byt $C2        ; F3
         .byt '@'        ; 2
         .byt 'W'        ; W
         .byt 'S'        ; S
         .byt 'X'        ; X
         .byt 'C'        ; C
-        .byt 0          ; F4
+        .byt $C3        ; F4
         .byt '#'        ; 3
         .byt 'E'        ; E
         .byt 'D'        ; D
         .byt 'F'        ; F
         .byt 'V'        ; V
-        .byt 0          ; F5
+        .byt $C4        ; F5
         .byt '$'        ; 4
         .byt 'R'        ; R
         .byt 'T'        ; T
         .byt 'G'        ; G
         .byt 'B'        ; B
-        .byt 0          ; F6
+        .byt $C5        ; F6
         .byt '%'        ; 5
         .byt '^'        ; 6
         .byt 'Y'        ; Y
         .byt 'H'        ; H
         .byt 'N'        ; N
-        .byt 0          ; F7
+        .byt $C6        ; F7
         .byt '&'        ; 7
         .byt 'U'        ; U
         .byt 'J'        ; J
         .byt 'M'        ; M
         .byt ' '        ; Space
-        .byt 0          ; F8
+        .byt $C7        ; F8
         .byt '*'        ; 8
         .byt 'I'        ; I
         .byt 'K'        ; K
         .byt '<'        ; ,
         .byt '>'        ; .
-        .byt 0          ; F9
+        .byt $C8        ; F9
         .byt '('        ; 9
         .byt 'O'        ; O
         .byt 'L'        ; L
         .byt ':'        ; ;
         .byt '?'        ; /
-        .byt 0          ; F10
+        .byt $C9        ; F10
         .byt ')'        ; 0
         .byt '_'        ; -
         .byt 'P'        ; P
         .byt '{'        ; [
         .byt '"'        ; '
-        .byt 0          ; Cursor down
+        .byt $83        ; Cursor down
         .byt '+'        ; =
         .byt '|'        ; Pound
         .byt '}'        ; ]
         .byt $0D        ; Return
         .byt '~'        ; Pi
-        .byt 0          ; Cursor up
-        .byt 0          ; Cursor left
-        .byt 0          ; Cursor right
+        .byt $80        ; Cursor up
+        .byt $81        ; Cursor left
+        .byt $82        ; Cursor right
         .byt $7F        ; Ins/Del
         .byt 0          ; C=
         .byt 0
@@ -321,7 +321,7 @@ shift_table:
         .byt '1'        ; Numeric 1
         .byt '0'        ; Numeric 0
         .byt 0          ; Rvs/Off
-        .byt 0          ; CE
+        .byt $84        ; CE
         .byt '8'        ; Numeric 8
         .byt '5'        ; Numeric 5
         .byt '2'        ; Numeric 2
@@ -340,75 +340,75 @@ shift_table:
         .byt 0
 
 ctrl_table:
-        .byt 0          ; F1
+        .byt $C0        ; F1
         .byt 0          ; Esc
         .byt 0          ; Tab
         .byt 0
         .byt 0          ; Shift
         .byt 0          ; Ctrl
-        .byt 0          ; F2
+        .byt $C1        ; F2
         .byt 0          ; 1
         .byt 'Q'-64     ; Q
         .byt 'A'-64     ; A
         .byt 'Z'-64     ; Z
         .byt 0
-        .byt 0          ; F3
+        .byt $C2        ; F3
         .byt 0          ; 2
         .byt 'W'-64     ; W
         .byt 'S'-64     ; S
         .byt 'X'-64     ; X
         .byt 'C'-64     ; C
-        .byt 0          ; F4
+        .byt $C3        ; F4
         .byt 0          ; 3
         .byt 'E'-64     ; E
         .byt 'D'-64     ; D
         .byt 'F'-64     ; F
         .byt 'V'-64     ; V
-        .byt 0          ; F5
+        .byt $C4        ; F5
         .byt 0          ; 4
         .byt 'R'-64     ; R
         .byt 'T'-64     ; T
         .byt 'G'-64     ; G
         .byt 'B'-64     ; B
-        .byt 0          ; F6
+        .byt $C5        ; F6
         .byt 0          ; 5
         .byt 0          ; 6
         .byt 'Y'-64     ; Y
         .byt 'H'-64     ; H
         .byt 'N'-64     ; N
-        .byt 0          ; F7
+        .byt $C6        ; F7
         .byt 0          ; 7
         .byt 'U'-64     ; U
         .byt 'J'-64     ; J
         .byt 'M'-64     ; M
         .byt 0          ; Space
-        .byt 0          ; F8
+        .byt $C7        ; F8
         .byt 0          ; 8
         .byt 'I'-64     ; I
         .byt 'K'-64     ; K
         .byt 0          ; ,
         .byt 0          ; .
-        .byt 0          ; F9
+        .byt $C8        ; F9
         .byt 0          ; 9
         .byt 'O'-64     ; O
         .byt 'L'-64     ; L
         .byt 0          ; ;
         .byt 0          ; /
-        .byt 0          ; F10
+        .byt $C9        ; F10
         .byt 0          ; 0
         .byt 0          ; -
         .byt 'P'-64     ; P
         .byt 0          ; [
         .byt 0          ; '
-        .byt 0          ; Cursor down
+        .byt $83        ; Cursor down
         .byt 0          ; =
         .byt 0          ; Pound
         .byt 0          ; ]
         .byt $0D        ; Return
         .byt 0          ; Pi
-        .byt 0          ; Cursor up
-        .byt 0          ; Cursor left
-        .byt 0          ; Cursor right
+        .byt $80        ; Cursor up
+        .byt $81        ; Cursor left
+        .byt $82        ; Cursor right
         .byt 0          ; Ins/Del
         .byt 0          ; C=
         .byt 0

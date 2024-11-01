@@ -343,6 +343,110 @@ fat32_scan_file:
         rts       
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Get a list of BIN files
+; Input:
+;   A:Y - pointer to the buffer for the list of files
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        
+fat32_list_files:
+        BANK_SAVE
+        sta fat32_ptr_1
+        sty fat32_ptr_1+1
+        ldx #ROOT_CLUSTER
+        ldy #CURRENT_CLUSTER
+        jsr int32_copy
+        
+        ; Load a root directory cluster 
+@load_cluster:        
+        ldx #CURRENT_CLUSTER
+        ldy #CURRENT_SECTOR
+        jsr fat32_cluster_to_sector
+        lda #0
+        sta fat32_sector_number
+        
+        ; Load next sector from the cluster
+@load_sector:        
+        jsr fat32_load_sector
+        lda #<fat32_buffer
+        sta fat32_ptr_2
+        lda #>fat32_buffer
+        sta fat32_ptr_2+1
+        
+@filename_check:
+        ; Search one directory entry
+        ldy #0
+        lda (fat32_ptr_2),y
+        beq @end
+        cmp #$E5
+        beq @filename_no_match
+        ldy #10
+        lda (fat32_ptr_2),y
+        cmp #'N'
+        bne @filename_no_match
+        dey
+        lda (fat32_ptr_2),y
+        cmp #'I'
+        bne @filename_no_match
+        dey
+        lda (fat32_ptr_2),y
+        cmp #'B'
+        bne @filename_no_match
+
+        ; Copy filename and advance pointer
+        iny
+        iny
+@filename_loop:        
+        lda (fat32_ptr_2),y        
+        sta (fat32_ptr_1),y
+        dey
+        bpl @filename_loop
+        
+        lda fat32_ptr_1
+        clc
+        adc #11
+        sta fat32_ptr_1
+        cmp #253
+        beq @end
+        lda fat32_ptr_1+1
+        adc #0
+        sta fat32_ptr_1+1
+        
+        ; Go to next directory entry
+@filename_no_match:
+        clc
+        lda fat32_ptr_2
+        adc #$20
+        sta fat32_ptr_2
+        lda fat32_ptr_2+1
+        adc #$00
+        sta fat32_ptr_2+1
+        cmp #>fat32_buffer+2
+        bne @filename_check
+        
+        ; Load next sector
+        ldy #CURRENT_SECTOR
+        jsr int32_inc
+        inc fat32_sector_number
+        lda fat32_sector_number
+        cmp fat32_cluster_sectors
+        bne @load_sector
+        
+        ldx #CURRENT_CLUSTER
+        ldy #CURRENT_CLUSTER
+        jsr fat32_next_cluster
+        lda fat32_pointers+CURRENT_CLUSTER+3
+        beq @load_cluster
+
+@end:
+        lda #0
+        tay
+        sta (fat32_ptr_1),y
+        BANK_RESTORE
+        clc
+        lda #$00
+        rts
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Translates logocal file sector to physical disk sector
 ; Input:
 ;   A:Y - pointer to the list of file fragments
@@ -422,7 +526,7 @@ fat32_translate:
 @error:
         BANK_RESTORE
         rts
-
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Calculates sector number for the cluster
 ; Y := sector (X)

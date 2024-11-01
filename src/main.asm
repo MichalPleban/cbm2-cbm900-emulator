@@ -6,8 +6,6 @@
 .ifdef PRG
 .include "cbm2/stub.asm"
 .res ($0400-*), $FF
-.else
-.org $0400
 .endif
 
 .org $0400
@@ -49,12 +47,17 @@ start:
         ; Main loop
 @loop:
         jsr disk_handle
+        lda kbd_stop
+        bpl @loop
+        jsr menu_show
+        lda #$00
+        sta kbd_stop
         jmp @loop
 
 
         
 banner:
-        .byt "Commodore C900 emulation layer version 0.4.4, (C) Michal Pleban", $0D, $0A, $0D, $0A, 0
+        .byt "Commodore C900 emulation layer version 0.5.0, (C) Michal Pleban", $0D, $0A, $0D, $0A, 0
 
 .include "trace.asm"
 
@@ -208,14 +211,14 @@ sd_write_bank15:
         
         .res ($0600-*), $FF
         
+.include "cbm2.asm"
+.include "menu.asm"
 .include "emul.asm"
-.include "cbm2/init.asm"
-.include "cbm2/screen.asm"
-.include "cbm2/irq.asm"
-.include "cbm2/kbd.asm"
-.include "cbm2/serial.asm"
 
 load_files:
+        lda #$80
+        sta floppy_present
+
         lda #<banner_sd
         ldy #>banner_sd
         jsr screen_string
@@ -224,6 +227,30 @@ load_files:
         lda #<msg_ok
         ldy #>msg_ok
         jsr screen_string
+
+        bit floppy_present
+        bpl @no_floppy
+        lda #<banner_fd
+        ldy #>banner_fd
+        jsr screen_string
+        lda #<fd_filename
+        ldy #>fd_filename
+        jsr filename_print
+        lda #<msg_ellipsis
+        ldy #>msg_ellipsis
+        jsr screen_string
+        lda #<fd_filename
+        ldy #>fd_filename
+        jsr fat32_find_file
+        bcs @disk_error
+        lda #<fd_mapping
+        ldy #>fd_mapping
+        jsr fat32_scan_file
+        bcs @disk_error
+        lda #<msg_ok
+        ldy #>msg_ok
+        jsr screen_string
+@no_floppy:
 
         lda #<banner_hd
         ldy #>banner_hd
@@ -275,10 +302,10 @@ load_files:
         jmp load_files
 
 @stop:
+        jsr menu_show
         lda #$00
         sta kbd_stop
         sei
-        jsr menu_show
         lda #$0D
         jsr screen_output
         lda #$0A
@@ -287,12 +314,14 @@ load_files:
         
         
 banner_sd:      .byt "Initializing SD card... ", 0
+banner_fd:      .byt "Loading floppy disk image ", 0
 banner_hd:      .byt "Loading hard disk image ", 0
 msg_ellipsis:   .byt "... ", 0
 msg_ok:         .byt "OK", $0D, $0A, 0
 banner_retry:   .byt "Press Enter to retry.", $0D, $0A, 0
 
 hd_filename:    .byt "HDD     BIN",0
+fd_filename:    .byt "DISK1   BIN",0
 
 .ifdef PRG
 .res 16, $AA

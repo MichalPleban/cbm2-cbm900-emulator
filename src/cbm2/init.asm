@@ -1,4 +1,11 @@
 
+; Memory pointers for the FAT32 driver
+fat32_buffer = $FC00
+hd_mapping = $FB00
+fd_mapping = $FA00
+config_mapping = $F900
+file_list = $F800
+
 machine_init:
         ; Initialize chip pointers
         lda #$D0

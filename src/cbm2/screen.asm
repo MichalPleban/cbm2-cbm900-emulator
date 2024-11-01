@@ -90,7 +90,8 @@ screen_output:
 @pc_charset:
         lda petscii_table2, x
 @output2:
-        ora screen_invert
+        eor screen_invert
+        eor menu_visible 
         ldy screen_x
         sta (SCREEN),y
         
@@ -149,8 +150,35 @@ screen_scroll:
         dey
         bpl @loop3
 
-; Position cursor on the screen
+; Set screen X and Y position
+; Input: X - screen X, Y - screen Y
+; Destroyed: A, Y
+screen_position:
+        stx screen_x
+        sty screen_y
+        lda #$00
+        sta SCREEN
+        lda #$D0
+        sta SCREEN+1
+        dey
+        bmi @end
+@loop:
+        lda SCREEN
+        clc
+        adc #$50
+        sta SCREEN
+        lda SCREEN+1
+        adc #0
+        sta SCREEN+1
+        dey
+        bpl @loop
+@end:
+        rts
+        
+; Position CRTC cursor according to the screen position
 screen_cursor:
+        bit menu_visible
+        bmi @end
         lda screen_x
         clc
         adc SCREEN
@@ -165,6 +193,7 @@ screen_cursor:
 @cbm_charset:
         dex
         jsr crtc_write
+@end:
         rts
 
 ; Output null-terminated string to screen
@@ -249,6 +278,13 @@ petscii_table2:
 	.byt $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $7c, $7c, $79, $5f, $5f, $74, $7f
 
 menu_show:
+        ; Stop the CPU
+        ldy #6
+        lda (CHIPSET),y
+        ora #$04
+        sta (CHIPSET),y
+
+        ; Save screen pointers and variables
         lda SCREEN
         sta menu_ptr_save
         lda SCREEN+1
@@ -257,6 +293,10 @@ menu_show:
         sta menu_ptr_save+2
         lda screen_y
         sta menu_ptr_save+3
+        lda screen_invert
+        sta menu_ptr_save+4
+        lda#$00
+        sta screen_invert
         
         ; Save the current screen
         lda #<screen_save
@@ -269,16 +309,130 @@ menu_show:
         sta scratchpad+2
         tax
         tay
-@loop1:        
+@loop_copy:        
         lda (scratchpad+2),y
         sta (scratchpad,x)
         inc scratchpad
         inc scratchpad+2
-        bne @loop1
+        bne @loop_copy
         inc scratchpad+1
         inc scratchpad+3
         lda scratchpad+3
         cmp #$D8
-        bne @loop1
+        bne @loop_copy
+
+        ; Hide CRTC cursor
+        ldx #15
+        lda #$FF
+        jsr crtc_write
+        dex
+        jsr crtc_write
+
+        jsr menu_enter
         
+        ; Restore the screen
+        lda #<screen_save
+        sta scratchpad
+        lda #>screen_save
+        sta scratchpad+1
+        lda #$D0
+        sta scratchpad+3
+        lda #$00
+        sta scratchpad+2
+        tax
+        tay
+@loop_restore:
+        lda (scratchpad,x)
+        sta (scratchpad+2),y
+        inc scratchpad
+        inc scratchpad+2
+        bne @loop_restore
+        inc scratchpad+1
+        inc scratchpad+3
+        lda scratchpad+3
+        cmp #$D8
+        bne @loop_restore
+           
+        ; Restore screen pointers and variables
+        lda menu_ptr_save
+        sta SCREEN
+        lda menu_ptr_save+1
+        sta SCREEN+1
+        lda menu_ptr_save+2
+        sta screen_x
+        lda menu_ptr_save+3
+        sta screen_y
+        lda menu_ptr_save+4
+        sta screen_invert
+        jsr screen_cursor
+
+        ; Start the CPU     
+        ldy #6
+        lda (CHIPSET),y
+        and #$FA
+        sta (CHIPSET),y
+        
+        rts
+        
+        ; Draw the menu background
+menu_background:
+        lda #$A4
+        sta scratchpad
+        lda #$D1
+        sta scratchpad+1
+        ldx #15
+@loop_bk_1:
+        ldy #39
+        lda #$DD
+        sta (scratchpad),y
+        dey
+@loop_bk_2:
+        lda #$A0
+        sta (scratchpad),y
+        dey
+        bne @loop_bk_2
+        lda #$DD
+        sta (scratchpad),y
+        lda scratchpad
+        clc
+        adc #80
+        sta scratchpad
+        lda scratchpad+1
+        adc #0
+        sta scratchpad+1
+        dex
+        bne @loop_bk_1
+
+        lda #$54
+        sta scratchpad
+        lda #$D1
+        sta scratchpad+1
+        ldy #39
+        lda #$EE
+        sta (scratchpad),y
+        dey
+@loop_frame_1:
+        lda #$C0
+        sta (scratchpad),y
+        dey
+        bne @loop_frame_1
+        lda #$F0
+        sta (scratchpad),y
+        
+        lda #$54
+        sta scratchpad
+        lda #$D6
+        sta scratchpad+1
+        ldy #39
+        lda #$FD
+        sta (scratchpad),y
+        dey
+@loop_frame_2:
+        lda #$C0
+        sta (scratchpad),y
+        dey
+        bne @loop_frame_2
+        lda #$ED
+        sta (scratchpad),y
+
         rts

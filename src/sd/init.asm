@@ -143,7 +143,6 @@ sd_init:
         pla
         cmp #0
         beq @finished
-        sta $6000
         lda #$06
         
 @finished:

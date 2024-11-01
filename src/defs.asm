@@ -69,6 +69,7 @@ disk_request:   .res 1
 disk_unit:      .res 1
 disk_sectors:   .res 1
 disk_irq:       .res 1
+floppy_present: .res 1
 
 ; SD card access
 sd_initialized: .res 1
@@ -97,7 +98,9 @@ fat32_ptr_2:    .res 2
 
 ; Menu
 menu_visible:   .res 1
-menu_ptr_save:  .res 4
+menu_ptr_save:  .res 5
+menu_file_pos:  .res 1
+menu_file_max:  .res 1
 
 ; Temporary variables
 scratchpad:     .res 8

@@ -1,7 +1,4 @@
 
-FD_START = 40992
-HD_START = 43312
-
 .macro  SD_WRITE value
         lda #value
         jsr sd_output
@@ -18,10 +15,6 @@ HD_START = 43312
         ldx #$0F
         stx $01
 .endmacro
-
-fat32_buffer = $FC00
-hd_mapping = $FB00
-fd_mapping = $FA00
 
 disk_init:
         lda #$00
@@ -163,10 +156,13 @@ disk_finish:
         
 disk_read:
         ; Disable floppy
-        lda #$70
+        bit floppy_present
+        bmi @floppy_present
+        lda #$92
         ldx disk_unit
-        bne @ok
+        bne @finish
 
+@floppy_present:        
 .ifdef DEBUG
         lda #<read_banner
         ldy #>read_banner
@@ -190,10 +186,13 @@ disk_read:
         
 disk_write:
         ; Disable floppy
-        lda #$70
+        bit floppy_present
+        bmi @floppy_present
+        lda #$92
         ldx disk_unit
-        bne @ok
+        bne @finish
 
+@floppy_present:
 .ifdef DEBUG
         lda #<write_banner
         ldy #>write_banner
@@ -274,31 +273,14 @@ disk_sector:
 disk_translate:
         ldx disk_unit
         beq @hdd
-        clc
-        lda sd_sector
-        adc #<FD_START
-        sta sd_sector
-        lda sd_sector+1
-        adc #>FD_START
-        sta sd_sector+1
-        lda sd_sector+2
-        adc #0
-        sta sd_sector+2
+        lda #<fd_mapping
+        ldy #>fd_mapping
+        jsr fat32_translate
         jmp @end
 @hdd:
         lda #<hd_mapping
         ldy #>hd_mapping
         jsr fat32_translate
-;        clc
-;        lda sd_sector
-;        adc #<HD_START
-;        sta sd_sector
-;        lda sd_sector+1
-;        adc #>HD_START
-;        sta sd_sector+1
-;        lda sd_sector+2
-;        adc #0
-;        sta sd_sector+2
        
 @end:
 .ifdef DEBUG
