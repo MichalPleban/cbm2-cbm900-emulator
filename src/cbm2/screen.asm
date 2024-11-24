@@ -149,6 +149,7 @@ screen_scroll:
         sta (SCREEN),y
         dey
         bpl @loop3
+        rts
 
 ; Set screen X and Y position
 ; Input: X - screen X, Y - screen Y
