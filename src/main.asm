@@ -57,7 +57,7 @@ start:
 
         
 banner:
-        .byt "Commodore C900 emulation layer version 0.5.0, (C) Michal Pleban", $0D, $0A, $0D, $0A, 0
+        .byt "Commodore C900 emulation layer version 0.5.0, (C) Michal Pleban `~_{}\|", $0D, $0A, $0D, $0A, 0
 
 .include "trace.asm"
 
