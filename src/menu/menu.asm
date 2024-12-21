@@ -39,6 +39,14 @@ menu_redraw:
         jmp menu_redraw
         
 @not_f3: 
+        ; F5 - Video configuration
+        cmp #$C4
+        bne @not_f5
+        jsr menu_video
+        jsr save_config        
+        jmp menu_redraw
+
+@not_f5: 
         ; F6 - Reset config
         cmp #$C5
         bne @not_f6
@@ -59,7 +67,7 @@ menu_redraw:
         bne @exit
 
 @not_f8:
-        cmp #$27
+        cmp #27
         bne @main_loop
 
 @exit:
@@ -455,7 +463,7 @@ menu_select_hdd:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 menu_reset_config:
-        ldy #_config_end-_config_start
+        ldy #_config_end-_config_start-1
 @loop:
         lda _config_start,y
         sta config_data,y
@@ -463,6 +471,11 @@ menu_reset_config:
         bpl @loop
         rts
         
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Video configuration
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
 menu_option_1:
         .byt "F1:  Select floppy image", 0
 menu_option_1b:

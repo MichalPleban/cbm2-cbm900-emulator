@@ -1,5 +1,7 @@
 
 screen_save = $F000
+screen_charset = config_data + $29
+
 
 ; Initialize the screen routines
 screen_init:
@@ -7,15 +9,13 @@ screen_init:
         lda #$00
         sta screen_invert
         sta menu_visible
-        lda #$00
-        sta screen_charset
         ldx #10
         lda #$60
         jsr crtc_write
         ldx #12
         jsr crtc_read
         bit screen_charset
-        bmi @pc_charset
+        bvs @pc_charset
         and #$EF
         .byt $2C
 @pc_charset:
@@ -84,7 +84,7 @@ screen_output:
         rts
 @output:
         bit screen_charset
-        bmi @pc_charset
+        bvs @pc_charset
         lda petscii_table, x
         jmp @output2
 @pc_charset:
@@ -189,7 +189,7 @@ screen_cursor:
         adc #0
         and #$07
         bit screen_charset
-        bpl @cbm_charset
+        bvc @cbm_charset
         ora #$10
 @cbm_charset:
         dex
@@ -442,3 +442,85 @@ menu_background:
         sta (scratchpad),y
 
         rts
+        
+menu_video:
+        jsr menu_background
+        ldx #24
+        ldy #6
+        jsr screen_position
+        lda #<menu_video_1
+        ldy #>menu_video_1
+        jsr screen_string
+        ldx #24
+        ldy #8
+        jsr screen_position
+        lda #<menu_video_2
+        ldy #>menu_video_2
+        jsr screen_string
+        ldx #22
+        ldy #11
+        jsr screen_position
+        lda #<menu_video_r
+        ldy #>menu_video_r
+        jsr screen_string
+        ldx #22
+        ldy #12
+        jsr screen_position
+        lda #<menu_video_r2
+        ldy #>menu_video_r2
+        jsr screen_string
+@show_options:
+        ldx #22
+        ldy #6
+        jsr screen_position
+        bit screen_charset
+        bvc @cbm_charset
+        lda #$20
+        bne @show_first
+@cbm_charset:
+        lda #'>'
+@show_first:
+        jsr screen_output
+        ldx #22
+        ldy #8
+        jsr screen_position
+        bit screen_charset
+        bvs @pc_charset
+        lda #$20
+        bne @show_second
+@pc_charset:
+        lda #'>'
+@show_second:
+        jsr screen_output
+@loop:
+        jsr kbd_fetch
+        cmp #'a'
+        beq @is_a
+        cmp #'A'
+        bne @not_a
+@is_a:
+        lda #$00
+        sta screen_charset
+        beq @show_options
+@not_a:
+        cmp #'b'
+        beq @is_b
+        cmp #'B'
+        bne @not_b
+@is_b:
+        lda #$40
+        sta screen_charset
+        bne @show_options
+@not_b:
+        cmp #27
+        bne @loop
+        rts
+
+menu_video_1:
+        .byt "A: Inbuilt video, standard charset", 0
+menu_video_2:
+        .byt "B: Inbuilt video, PC charset", 0
+menu_video_r:
+        .byt "WARNING: Video mode change will only", 0
+menu_video_r2:
+        .byt "take effect after system reload.", 0

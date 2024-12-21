@@ -145,7 +145,7 @@ kbd_fetch:
         
 normal_table:
         .byt $C0        ; F1
-        .byt $27        ; Esc
+        .byt 27         ; Esc
         .byt $09        ; Tab
         .byt 0
         .byt 0          ; Shift
@@ -243,7 +243,7 @@ normal_table:
 
 shift_table:
         .byt $C0        ; F1
-        .byt $27        ; Esc
+        .byt 27         ; Esc
         .byt $09        ; Tab
         .byt 0
         .byt 0          ; Shift

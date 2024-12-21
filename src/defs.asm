@@ -21,7 +21,6 @@ TPI2:           .res 2
 screen_x:       .res 1
 screen_y:       .res 1
 screen_ptr:     .res 2
-screen_charset: .res 1
 screen_invert:  .res 1
 
 ; Z8000 state
