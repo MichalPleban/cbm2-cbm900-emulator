@@ -279,11 +279,14 @@ petscii_table2:
 	.byt $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $5f, $7c, $7c, $79, $5f, $5f, $74, $7f
 
 menu_show:
-        ; Stop the CPU
+        ; Stop the CPU if needed
+        bit z8000_started
+        bpl @not_started
         ldy #6
         lda (CHIPSET),y
         ora #$04
         sta (CHIPSET),y
+@not_started:
 
         ; Save screen pointers and variables
         lda SCREEN
@@ -367,12 +370,14 @@ menu_show:
         sta screen_invert
         jsr screen_cursor
 
-        ; Start the CPU     
+        ; Start the CPU if needed    
+        bit z8000_started
+        bpl @not_stopped
         ldy #6
         lda (CHIPSET),y
         and #$FA
         sta (CHIPSET),y
-        
+@not_stopped:        
         rts
         
         ; Draw the menu background

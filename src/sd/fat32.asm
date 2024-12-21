@@ -447,7 +447,7 @@ fat32_list_files:
         rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Translates logocal file sector to physical disk sector
+; Translates logical file sector to physical disk sector
 ; Input:
 ;   A:Y - pointer to the list of file fragments
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -2,7 +2,7 @@
 ROM = bin/emulate.bin bin/emulate.prg
 STUB = bin/stub.bin bin/stub.prg
 SD = bin/sd.bin bin/sd.prg
-SRC_MAIN = src/main.asm src/defs.asm src/trace.asm src/emul.asm src/menu.asm
+SRC_MAIN = src/main.asm src/defs.asm src/trace.asm src/emul.asm src/menu/menu.asm src/menu/config.asm src/tools/config.asm
 SRC_CBM = src/cbm2.asm src/cbm2/init.asm src/cbm2/screen.asm src/cbm2/irq.asm src/cbm2/kbd.asm src/cbm2/serial.asm src/cbm2/stub.asm
 SRC_EMUL = src/emul/scc.asm src/emul/cio.asm src/emul/cio2.asm src/emul/disk.asm src/emul/irq.asm
 SRC_SD = src/sd/init.asm src/sd/access.asm src/sd/fat32.asm
@@ -52,3 +52,11 @@ upload_stub: bin/stub.prg
 
 upload_sd: bin/sd.prg
 	tools/cbmlink -c serial com1 -b 15 -lo,16384 bin/sd.prg
+
+bin/config.cfg: src/tools/config.asm
+	ca65 src/tools/config.asm -DCONFIG_FILE
+	ld65 src/tools/config.o -C src/main.cfg -o bin/config.cfg
+	rm src/tools/config.o
+
+config:	bin/config.cfg
+

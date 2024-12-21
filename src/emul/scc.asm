@@ -97,14 +97,14 @@ scc_load:
 scc_table:
         .word empty, scc_in_00          ; 00
         .word scc_save, scc_load        ; 01
-        .word scc_out_02, scc_load        ; 02
+        .word scc_out_02, scc_load      ; 02
         .word empty, undefined          ; 03
         .word empty, undefined          ; 04
         .word empty, undefined          ; 05
         .word empty, undefined          ; 06
         .word empty, undefined          ; 07
         .word scc_out_08, scc_in_08     ; 08
-        .word scc_out_09, undefined          ; 09
+        .word scc_out_09, undefined     ; 09
         .word empty, undefined          ; 0A
         .word empty, undefined          ; 0B
         .word scc_save, scc_load        ; 0C

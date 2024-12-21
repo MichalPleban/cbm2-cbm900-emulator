@@ -25,6 +25,7 @@ screen_charset: .res 1
 screen_invert:  .res 1
 
 ; Z8000 state
+z8000_started:  .res 1
 z8000_addr:     .res 2
 z8000_data:     .res 1
 z8000_status:   .res 1
@@ -69,7 +70,6 @@ disk_request:   .res 1
 disk_unit:      .res 1
 disk_sectors:   .res 1
 disk_irq:       .res 1
-floppy_present: .res 1
 
 ; SD card access
 sd_initialized: .res 1
@@ -97,10 +97,15 @@ fat32_ptr_1:    .res 2
 fat32_ptr_2:    .res 2
 
 ; Menu
+can_enter_menu: .res 1
 menu_visible:   .res 1
 menu_ptr_save:  .res 5
 menu_file_pos:  .res 1
+menu_file2_pos: .res 1
 menu_file_max:  .res 1
+menu_file_ptr:  .res 2
+menu_file2_ptr: .res 2
+menu_name_pos:  .res 1
 
 ; Temporary variables
 scratchpad:     .res 8

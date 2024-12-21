@@ -1,9 +1,9 @@
 
 F000 - F7FF     Saved screen contents when displaying the menu
 F800 - F8FF     List of files on the disk
-F900 - F9FF     Configuration file mapping
-FA00 - FAFF     Floppy disk file mapping
-FB00 - FBFF     Hard disk file mapping
-FC00 - FDFF     Sector read/write buffer
-FE00 - FFF9     free
+F900 - F9FF     Floppy disk file mapping
+FA00 - FAFF     Hard disk file mapping
+FB00 - FCFF     Sector read/write buffer
+FD00 - FEFF     Configuration file contents
+FF00 - FFF9     Configuration file mapping
 FFFA - FFFF     IRQ and NMI vectors

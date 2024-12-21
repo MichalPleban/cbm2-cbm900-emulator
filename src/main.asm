@@ -25,6 +25,8 @@ start:
         lda (CHIPSET),y
         ora #$01
         sta (CHIPSET),y
+        lda #0
+        sta z8000_started
         
         jsr screen_init
         lda #<banner
@@ -43,6 +45,8 @@ start:
         lda (CHIPSET),y
         and #$FE
         sta (CHIPSET),y
+        lda #$80
+        sta z8000_started
         
         ; Main loop
 @loop:
@@ -57,7 +61,7 @@ start:
 
         
 banner:
-        .byt "Commodore C900 emulation layer version 0.5.0, (C) Michal Pleban `~_{}\|", $0D, $0A, $0D, $0A, 0
+        .byt "Commodore C900 emulation layer version 0.5.1, (C) Michal Pleban", $0D, $0A, $0D, $0A, 0
 
 .include "trace.asm"
 
@@ -212,21 +216,42 @@ sd_write_bank15:
         .res ($0600-*), $FF
         
 .include "cbm2.asm"
-.include "menu.asm"
 .include "emul.asm"
 
 load_files:
-        lda #$80
-        sta floppy_present
+        lda #$00
+        sta can_enter_menu
 
         lda #<banner_sd
         ldy #>banner_sd
         jsr screen_string
         jsr fat32_init
+        bcc @init_ok
+        jmp @disk_error
+@init_ok:
+        lda #<msg_ok
+        ldy #>msg_ok
+        jsr screen_string
+
+        lda #<banner_config
+        ldy #>banner_config
+        jsr screen_string
+        lda #<config_filename
+        ldy #>config_filename
+        jsr fat32_find_file
+        bcs @disk_error
+        lda #<config_mapping
+        ldy #>config_mapping
+        jsr fat32_scan_file
+        bcs @disk_error
+        jsr load_config
         bcs @disk_error
         lda #<msg_ok
         ldy #>msg_ok
         jsr screen_string
+        
+        lda #$80
+        sta can_enter_menu
 
         bit floppy_present
         bpl @no_floppy
@@ -271,8 +296,7 @@ load_files:
         bcs @disk_error
         lda #<msg_ok
         ldy #>msg_ok
-        jsr screen_string
-        
+        jsr screen_string        
         rts
         
 @disk_error:
@@ -282,15 +306,25 @@ load_files:
         jsr screen_output
         lda #$0A
         jsr screen_output
+        bit can_enter_menu
+        bmi @can_menu
         lda #<banner_retry
         ldy #>banner_retry
+        bne @show_banner
+@can_menu:
+        lda #<banner_retry2
+        ldy #>banner_retry2
+@show_banner:
         jsr screen_string
         jsr irq_restart
         cli
 
-@disk_loop:        
-        lda kbd_stop
+@disk_loop:
+        bit can_enter_menu
+        bpl @cant_menu
+        bit kbd_stop
         bmi @stop
+@cant_menu:
         jsr kbd_fetch
         cmp #$0D
         bne @disk_loop
@@ -299,11 +333,13 @@ load_files:
         jsr screen_output
         lda #$0A
         jsr screen_output
+        lda #0
+        sta kbd_stop
         jmp load_files
 
 @stop:
         jsr menu_show
-        lda #$00
+        lda #0
         sta kbd_stop
         sei
         lda #$0D
@@ -312,16 +348,20 @@ load_files:
         jsr screen_output
         jmp load_files
         
+
+.include "menu/menu.asm"
+.include "menu/config.asm"
         
 banner_sd:      .byt "Initializing SD card... ", 0
+banner_config:  .byt "Loading configuration file CONFIG.CFG...", 0
 banner_fd:      .byt "Loading floppy disk image ", 0
 banner_hd:      .byt "Loading hard disk image ", 0
 msg_ellipsis:   .byt "... ", 0
 msg_ok:         .byt "OK", $0D, $0A, 0
 banner_retry:   .byt "Press Enter to retry.", $0D, $0A, 0
+banner_retry2:  .byt "Press Enter to retry, Run/Stop to configure.", $0D, $0A, 0
 
-hd_filename:    .byt "HDD     BIN",0
-fd_filename:    .byt "DISK1   BIN",0
+config_filename: .byt "CONFIG  CFG",0
 
 .ifdef PRG
 .res 16, $AA

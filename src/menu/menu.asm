@@ -18,6 +18,7 @@ menu_redraw:
         cmp #$C0
         bne @not_f1
         jsr menu_select_floppy
+        jsr save_config        
         jmp menu_redraw
         
 @not_f1: 
@@ -26,6 +27,7 @@ menu_redraw:
         bne @not_f2
         lda #$00
         sta floppy_present
+        jsr save_config        
         jmp menu_redraw
 
 @not_f2:
@@ -33,10 +35,21 @@ menu_redraw:
         cmp #$C2
         bne @not_f3
         jsr menu_select_hdd
+        jsr save_config        
         jmp menu_redraw
         
 @not_f3: 
-        ; F8 - Reset CPU
+        ; F6 - Reset config
+        cmp #$C5
+        bne @not_f6
+        jsr menu_reset_config
+        jsr save_config        
+        jmp menu_redraw
+
+@not_f6:
+        ; F8 - Reset CPU, only if started
+        bit z8000_started
+        bpl @not_f8
         cmp #$C7
         bne @not_f8
         ldy #6
@@ -52,6 +65,8 @@ menu_redraw:
 @exit:
         lda #$00
         sta menu_visible
+        ; Clear IRQ flag 
+        sta scc_irq_pending
         
         rts
         
@@ -110,12 +125,15 @@ menu_options:
         lda #<menu_option_5
         ldy #>menu_option_5
         jsr screen_string
+        bit z8000_started
+        bpl @not_started
         ldx #24
         ldy #18
         jsr screen_position
         lda #<menu_option_6
         ldy #>menu_option_6
         jsr screen_string
+@not_started:
         rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -128,6 +146,7 @@ menu_list_files:
         lda #<file_list
         ldy #>file_list
         jsr fat32_list_files
+        jsr menu_sort_files
 
         ; Draw the files on the screen        
         jsr menu_background
@@ -167,8 +186,6 @@ menu_list_files:
         bne @loop_2
         
 @end:
-        lda menu_file_pos
-        sta menu_file_max   
         rts
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -279,11 +296,11 @@ menu_select_floppy:
         tay
         pla
         jsr fat32_find_file
-        ; bcs @error
+        bcs @end
         lda #<fd_mapping
         ldy #>fd_mapping
         jsr fat32_scan_file
-        ; bcs @error    
+        bcs @end
         
         ; Copy filename
         lda menu_file_pos
@@ -300,10 +317,94 @@ menu_select_floppy:
         bne @loop
         lda #$80
         sta floppy_present
-        
+
+        clc
 @end:
         rts
                 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Sort file list
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+menu_sort_files:
+        ; Find the maximum number of files
+        ldx #0
+@loop:
+        lda menu_file_mul, x
+        tay
+        lda file_list, y
+        beq @found_max
+        inx
+        bne @loop
+@found_max:
+        stx menu_file_max
+        lda #0
+        sta menu_file_pos
+        lda #>file_list
+        sta menu_file_ptr+1
+        sta menu_file2_ptr+1
+        
+        ; Iterate over file pairs
+@next_first_file:
+        ldy menu_file_pos
+        cpy menu_file_max
+        beq @end
+        sty menu_file2_pos
+@next_second_file:
+        ldy menu_file_pos
+        lda menu_file_mul,y
+        sta menu_file_ptr
+        inc menu_file2_pos
+        ldy menu_file2_pos
+        cpy menu_file_max
+        bne @second_file
+        inc menu_file_pos
+        bne @next_first_file
+@second_file:
+        lda menu_file_mul,y
+        sta menu_file2_ptr
+        
+        ; Compare two file names
+        ldx #0
+        stx menu_name_pos
+@next_byte:
+        lda (menu_file_ptr,x)
+        cmp (menu_file2_ptr,x)
+        bne @files_differ
+        inc menu_file_ptr
+        inc menu_file2_ptr
+        inc menu_name_pos
+        lda menu_name_pos
+        cmp #11
+        bne @next_byte
+        jmp @next_second_file
+        
+@files_differ:
+        bcc @next_second_file
+        ; Swap two filenames
+        ldy menu_file_pos
+        lda menu_file_mul,y
+        sta menu_file_ptr
+        ldy menu_file2_pos
+        lda menu_file_mul,y
+        sta menu_file2_ptr
+        ldy #10
+@swap_loop:
+        lda (menu_file_ptr,x)
+        pha
+        lda (menu_file2_ptr,x)
+        sta (menu_file_ptr,x)
+        pla
+        sta (menu_file2_ptr,x)
+        inc menu_file_ptr
+        inc menu_file2_ptr
+        dey
+        bpl @swap_loop
+        bmi @next_second_file
+        
+@end:   
+        rts
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Select a hard disk image file
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -325,11 +426,11 @@ menu_select_hdd:
         tay
         pla
         jsr fat32_find_file
-        ; bcs @error
+        bcs @end
         lda #<hd_mapping
         ldy #>hd_mapping
         jsr fat32_scan_file
-        ; bcs @error    
+        bcs @end
         
         ; Copy filename
         lda menu_file_pos
@@ -344,12 +445,24 @@ menu_select_hdd:
         iny
         cpy #11
         bne @loop
-        lda #$80
-        sta floppy_present
-        
+
+        clc        
 @end:
         rts
                 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Restore default configuration
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+menu_reset_config:
+        ldy #_config_end-_config_start
+@loop:
+        lda _config_start,y
+        sta config_data,y
+        dey
+        bpl @loop
+        rts
+        
 menu_option_1:
         .byt "F1:  Select floppy image", 0
 menu_option_1b:
@@ -374,3 +487,5 @@ menu_file_x:
 menu_file_y:
         .byt 6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17, 6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17
         
+.include "../tools/config.asm"
+

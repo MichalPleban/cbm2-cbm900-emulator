@@ -1,10 +1,16 @@
 
-; Memory pointers for the FAT32 driver
-fat32_buffer = $FC00
-hd_mapping = $FB00
-fd_mapping = $FA00
-config_mapping = $F900
+; Memory pointers for the FAT32 driver (see src/memory.txt)
 file_list = $F800
+fd_mapping = $F900
+hd_mapping = $FA00
+fat32_buffer = $FB00
+config_data = $FD00
+config_mapping = $FF00
+
+floppy_present = config_data + $12
+hd_filename = config_data + $13
+fd_filename = config_data + $1E
+
 
 machine_init:
         ; Initialize chip pointers
