@@ -35,9 +35,15 @@ disk_handle:
         sei
         
         ; Halt the Z8000
-        ldy #6
+        ldy #REG_CONTROL
         lda (CHIPSET),y
-        ora #$04
+        ora #CTRL_BUSREQ
+        sta (CHIPSET),y
+
+        ; Turn on the LED
+        ldy #REG_IO_PINS
+        lda (CHIPSET),y
+        ora #IO_LED
         sta (CHIPSET),y
 
         ; Clear pending request flag
@@ -135,10 +141,16 @@ disk_finish:
         ; Copy SASI command block from bank 15 to Z8000 RAM
         jsr sasi_save_bank15
         
-        ; Restart the Z8000
-        ldy #6
+        ; Turn off the LED
+        ldy #REG_IO_PINS
         lda (CHIPSET),y
-        and #$FB
+        and #<~IO_LED
+        sta (CHIPSET),y
+        
+        ; Restart the Z8000
+        ldy #REG_CONTROL
+        lda (CHIPSET),y
+        and #<~CTRL_BUSREQ
         sta (CHIPSET),y
         
         ; Issue IRQ to the Z8000
@@ -425,7 +437,7 @@ sector_banner4:
 ; ------------------------------------------------------------------------
 
 sd_output:
-        ldy #7
+        ldy #REG_SD_CARD
         sta (CHIPSET),y
         lda (CHIPSET),y
         rts

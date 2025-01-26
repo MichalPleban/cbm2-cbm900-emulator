@@ -22,7 +22,7 @@ nmi_handler:
         sta IND_REG
 
 ; Copy Z8000 status from the chipset register
-        ldy #5
+        ldy #REG_CODE_HI
 @copy:
         lda (CHIPSET), y
         sta z8000_addr, y
@@ -91,7 +91,7 @@ nmi_end:
 .endif
 
 ; Restore registers
-        ldy #2
+        ldy #REG_DATA
         bit z8000_status
         bpl @notread
         ; Output the value to the Z8000 data bus
@@ -110,7 +110,7 @@ nmi_finish:
         nop
         sei
 @no_irq:
-        ldy #3
+        ldy #REG_STATUS
         lda nmi_save_ind
         sta IND_REG
         ldx nmi_save_x

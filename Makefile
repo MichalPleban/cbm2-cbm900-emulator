@@ -1,14 +1,16 @@
 
-ROM = bin/emulate.bin bin/emulate.prg
+ROM = bin/emulate.bin bin/emulate.prg bin/boot.bin
 STUB = bin/stub.bin bin/stub.prg
 SD = bin/sd.bin bin/sd.prg
+BOOT = bin/boot.bin bin/boot.prg
 SRC_MAIN = src/main.asm src/defs.asm src/trace.asm src/emul.asm src/menu/menu.asm src/menu/config.asm src/tools/config.asm
 SRC_CBM = src/cbm2.asm src/cbm2/init.asm src/cbm2/screen.asm src/cbm2/irq.asm src/cbm2/kbd.asm src/cbm2/serial.asm src/cbm2/stub.asm
 SRC_EMUL = src/emul/scc.asm src/emul/cio.asm src/emul/cio2.asm src/emul/disk.asm src/emul/irq.asm
 SRC_SD = src/sd/init.asm src/sd/access.asm src/sd/fat32.asm
 SRC = $(SRC_MAIN) $(SRC_CBM) $(SRC_EMUL) $(SRC_SD)
+SRC_BOOT = src/boot/boot.asm src/boot/defs.asm $(SRC_SD)
 
-all: $(ROM) $(STUB) $(SD)
+all: $(ROM) $(STUB) $(SD) $(BOOT)
 disk: bin/disk.d80
 
 bin/emulate.bin: $(SRC)
@@ -20,6 +22,16 @@ bin/emulate.prg: $(SRC)
 	ca65 src/main.asm -DPRG -DDEBUG
 	ld65 src/main.o -C src/main.cfg -o bin/emulate.prg
 	rm src/main.o
+
+bin/boot.bin: $(SRC_BOOT)
+	ca65 src/boot/boot.asm
+	ld65 src/boot/boot.o -C src/boot/boot.cfg -o bin/boot.bin
+	rm src/boot/boot.o
+
+bin/boot.prg: $(SRC_BOOT)
+	ca65 src/boot/boot.asm -DPRG
+	ld65 src/boot/boot.o -C src/boot/boot.cfg -o bin/boot.prg
+	rm src/boot/boot.o
 
 bin/stub.bin: src/tools/stub.asm
 	ca65 src/tools/stub.asm
@@ -52,6 +64,9 @@ upload_stub: bin/stub.prg
 
 upload_sd: bin/sd.prg
 	tools/cbmlink -c serial com1 -b 15 -lo,16384 bin/sd.prg
+
+upload_boot: bin/boot.prg
+	tools/cbmlink -c serial com1 -b 15 -lr,4096 bin/boot.prg
 
 bin/config.cfg: src/tools/config.asm
 	ca65 src/tools/config.asm -DCONFIG_FILE

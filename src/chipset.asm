@@ -1,0 +1,34 @@
+
+; Chipset registers
+
+REG_ADDR_LO = 0
+REG_ADDR_HI = 1
+REG_DATA    = 2
+REG_STATUS  = 3
+REG_CODE_LO = 4
+REG_CODE_HI = 5
+REG_CONTROL = 6
+REG_SD_CARD = 7
+REG_IO_PINS = 8
+
+; Status bits
+
+STAT_RW = $80
+STAT_IO = $40
+STAT_CODE = $20
+STAT_IRQ = $10
+
+; Control bits
+
+CTRL_RESET = $01
+CTRL_RAMEN = $02
+CTRL_BUSREQ = $04
+CTRL_STEPPER = $08
+CTRL_XOR15 = $10
+CTRL_XOR19 = $20
+CTRL_NVI = $40
+CTRL_VI = $80
+
+; I/O bits
+
+IO_LED = $01

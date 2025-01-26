@@ -30,7 +30,7 @@ irq_handle:
 .endif
 
         ; Output the value to the Z8000 data bus
-        ldy #2
+        ldy #REG_DATA
         lda z8000_data
         sta (CHIPSET),y
 
@@ -54,7 +54,7 @@ irq_debug_end:
 .endif
         
 irq_issue:
-        ldy #6
+        ldy #REG_CONTROL
         bit timer_irq_pending
         bmi @set
         bit scc_irq_pending
@@ -62,12 +62,12 @@ irq_issue:
         bit disk_irq
         bmi @set
         lda (CHIPSET),y
-        and #$7F
+        and #<~CTRL_VI
         sta (CHIPSET),y
         rts
 @set:
         lda (CHIPSET),y
-        ora #$80
+        ora #CTRL_VI
         sta (CHIPSET),y
         rts
         

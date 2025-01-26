@@ -10,6 +10,9 @@
 
 .org $0400
 
+.include "chipset.asm"
+.include "cbm2/defs.asm"
+
 start:
         sei
         cld
@@ -76,9 +79,9 @@ sasi_load_bank15:
         lda #$0F
         sta EXEC_REG
         ; Enable access to RAM & XOR A15
-        lda $D906
-        ora #$12
-        sta $D906
+        lda CHIPSET_BASE + REG_CONTROL
+        ora #CTRL_RAMEN+CTRL_XOR15
+        sta CHIPSET_BASE + REG_CONTROL
         lda #$08
         sta IND_REG
         lda #$00
@@ -92,9 +95,9 @@ sasi_load_bank15:
         dey
         bpl @loop
         ; Disable access to RAM
-        lda $D906
-        and #$CD
-        sta $D906
+        lda CHIPSET_BASE + REG_CONTROL
+        and #<~(CTRL_RAMEN+CTRL_XOR15+CTRL_XOR19)
+        sta CHIPSET_BASE + REG_CONTROL
         lda #$0F
         sta IND_REG
         lda #$01
@@ -105,9 +108,9 @@ sasi_save_bank15:
         lda #$0F
         sta EXEC_REG
         ; Enable access to RAM & XOR A15
-        lda $D906
-        ora #$12
-        sta $D906
+        lda CHIPSET_BASE + REG_CONTROL
+        ora #CTRL_RAMEN+CTRL_XOR15
+        sta CHIPSET_BASE + REG_CONTROL
         lda #$08
         sta IND_REG
         lda #$00
@@ -121,9 +124,9 @@ sasi_save_bank15:
         dey
         bpl @loop
         ; Disable access to RAM
-        lda $D906
-        and #$CD
-        sta $D906
+        lda CHIPSET_BASE + REG_CONTROL
+        and #<~(CTRL_RAMEN+CTRL_XOR15+CTRL_XOR19)
+        sta CHIPSET_BASE + REG_CONTROL
         lda #$0F
         sta IND_REG
         lda #$01
@@ -136,10 +139,10 @@ sd_read_bank15:
         ; Enable access to RAM & XOR address lines if necessary
         bit sd_bank
         bmi @computer_ram
-        lda $D906
-        ora #$02
+        lda CHIPSET_BASE + REG_CONTROL
+        ora #CTRL_RAMEN
 ;        ora sd_bank_flags
-        sta $D906
+        sta CHIPSET_BASE + REG_CONTROL
 @computer_ram:
         lda sd_bank
         sta IND_REG
@@ -155,8 +158,8 @@ sd_read_bank15:
         sta sd_loop
 @loop:
         lda #$FF
-        sta $D907
-        lda $D907
+        sta CHIPSET_BASE + REG_SD_CARD
+        lda CHIPSET_BASE + REG_SD_CARD
         ldy sd_loop
         sta (sd_ptr),y
         iny
@@ -166,9 +169,9 @@ sd_read_bank15:
         dec sd_loop+1
         bne @loop
         ; Disable access to RAM
-        lda $D906
-        and #$CD
-        sta $D906
+        lda CHIPSET_BASE + REG_CONTROL
+        and #<~(CTRL_RAMEN+CTRL_XOR15+CTRL_XOR19)
+        sta CHIPSET_BASE + REG_CONTROL
         lda #$0F
         sta IND_REG
         lda #$01
@@ -181,10 +184,10 @@ sd_write_bank15:
         ; Enable access to RAM & XOR address lines if necessary
         bit sd_bank
         bmi @computer_ram
-        lda $D906
-        ora #$02
+        lda CHIPSET_BASE + REG_CONTROL
+        ora #CTRL_RAMEN
 ;        ora sd_bank_flags
-        sta $D906
+        sta CHIPSET_BASE + REG_CONTROL
 @computer_ram:
         lda sd_bank
         sta IND_REG
@@ -196,7 +199,7 @@ sd_write_bank15:
 @loop:
         ldy sd_loop
         lda (sd_ptr),y
-        sta $D907
+        sta CHIPSET_BASE + REG_SD_CARD
         iny
         sty sd_loop
         bne @loop
@@ -204,9 +207,9 @@ sd_write_bank15:
         dec sd_loop+1
         bne @loop
         ; Disable access to RAM
-        lda $D906
-        and #$CD
-        sta $D906
+        lda CHIPSET_BASE + REG_CONTROL
+        and #<~(CTRL_RAMEN+CTRL_XOR15+CTRL_XOR19)
+        sta CHIPSET_BASE + REG_CONTROL
         lda #$0F
         sta IND_REG
         lda #$01
