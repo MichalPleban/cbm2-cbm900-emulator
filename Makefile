@@ -8,7 +8,7 @@ SRC_CBM = src/cbm2.asm src/cbm2/init.asm src/cbm2/screen.asm src/cbm2/irq.asm sr
 SRC_EMUL = src/emul/scc.asm src/emul/cio.asm src/emul/cio2.asm src/emul/disk.asm src/emul/irq.asm
 SRC_SD = src/sd/init.asm src/sd/access.asm src/sd/fat32.asm
 SRC = $(SRC_MAIN) $(SRC_CBM) $(SRC_EMUL) $(SRC_SD)
-SRC_BOOT = src/boot/boot.asm src/boot/defs.asm $(SRC_SD)
+SRC_BOOT = src/boot/init.asm src/boot/boot.asm src/boot/defs.asm $(SRC_SD)
 
 all: $(ROM) $(STUB) $(SD) $(BOOT)
 disk: bin/disk.d80
@@ -24,14 +24,14 @@ bin/emulate.prg: $(SRC)
 	rm src/main.o
 
 bin/boot.bin: $(SRC_BOOT)
-	ca65 src/boot/boot.asm
-	ld65 src/boot/boot.o -C src/boot/boot.cfg -o bin/boot.bin
-	rm src/boot/boot.o
+	ca65 -t c64 src/boot/init.asm
+	ld65 src/boot/init.o -C src/boot/boot.cfg -o bin/boot.bin
+	rm src/boot/init.o
 
 bin/boot.prg: $(SRC_BOOT)
-	ca65 src/boot/boot.asm -DPRG
-	ld65 src/boot/boot.o -C src/boot/boot.cfg -o bin/boot.prg
-	rm src/boot/boot.o
+	ca65 -t c64 src/boot/init.asm -DPRG
+	ld65 src/boot/init.o -C src/boot/boot.cfg -o bin/boot.prg
+	rm src/boot/init.o
 
 bin/stub.bin: src/tools/stub.asm
 	ca65 src/tools/stub.asm

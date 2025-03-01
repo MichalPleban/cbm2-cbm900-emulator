@@ -1,15 +1,4 @@
 
-.include "defs.asm"
-.include "../cbm2/defs.asm"
-.include "../chipset.asm"
-
-.ifdef PRG
-.data
-.byt $00, $10
-.endif
-
-.code
-.org $1000
 
 .macro  SD_WRITE value
         lda #value
@@ -33,7 +22,7 @@
         stx $01
 .endmacro
 
-boot_emulation:
+boot_file:
         sei
         
         ; Init the SD card and look for the emulation file
@@ -115,6 +104,7 @@ boot_emulation:
         
 @error:
         ; Report error and return
+        sta $1FFF
         cli
         rts
         
@@ -132,6 +122,9 @@ boot_emulation:
 
 sd_output:
         sta CHIPSET_BASE + REG_SD_CARD
+        nop
+        nop
+        nop
         nop
         lda CHIPSET_BASE + REG_SD_CARD
         rts
@@ -182,10 +175,10 @@ sd_write_loop:
         sta $01
         rts
 
+emul_filename:
+        .byt $45, $4D, $55, $4C, $43, $42, $4D, $32, $42, $49, $4e ; "EMULCBM2BIN"
+
 .include "../sd/init.asm"
 .include "../sd/access.asm"
 .include "../sd/fat32.asm"
 
-emul_filename:  .byt "EMULCBM2BIN"
-
-.res ($2000-*),$FF
