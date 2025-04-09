@@ -33,11 +33,18 @@ boot_file:
         lda #<emul_filename
         ldy #>emul_filename
         jsr fat32_find_file
-        bcs @error        
+        bcc @initialize_ok
+        jmp @error        
+@initialize_ok:
         lda #<file_mapping
         ldy #>file_mapping
         jsr fat32_scan_file
         bcs @error        
+        
+        ; Disable expansion RAM
+        lda $D906
+        and #$FD
+        sta $D906
         
         ; Load file into memory
         lda #0

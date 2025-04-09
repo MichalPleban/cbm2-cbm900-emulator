@@ -5,6 +5,9 @@
 
 .ifdef PRG
 .include "cbm2/stub.asm"
+
+
+
 .res ($0400-*), $FF
 .endif
 
@@ -20,6 +23,20 @@ start:
         txs
         lda #$0F
         sta IND_REG
+        
+        ; Check if RAM expansion is enabled. If yes, copy itself to machine RAM.
+        lda #$00
+        sta CHIPSET
+        lda #$D9
+        sta CHIPSET+1
+        ldy #REG_CONTROL
+        lda (CHIPSET),y
+        and #CTRL_RAMEN
+        beq no_expansion
+        
+        jmp copy_program
+        
+no_expansion:        
         
         jsr machine_init
         
@@ -218,6 +235,60 @@ sd_write_bank15:
         
         .res ($0600-*), $FF
         
+; ------------------------------------------------------------------------
+; Routine to copy the program from expansion to machine RAM
+; ------------------------------------------------------------------------
+bank15_0600:
+
+copy_program:
+        ; First, copy the routine to bank 15
+        ldy #0
+        sty scratchpad
+        lda #$06
+        sta scratchpad+1
+@loop:
+        lda copy_program,y
+        sta (scratchpad),y
+        iny
+        bne @loop
+        
+        ; Then, switch to bank 15 and copy the program
+        lda #$0F
+        sta EXEC_REG
+        lda #$01
+        sta IND_REG
+        ldy #00
+        sty scratchpad
+        lda #$04
+        sta scratchpad+1
+@loop2:
+        lda CHIPSET_BASE+REG_CONTROL
+        ora #CTRL_RAMEN
+        sta CHIPSET_BASE+REG_CONTROL
+        lda (scratchpad),y
+        tax
+        lda CHIPSET_BASE+REG_CONTROL
+        and #255-CTRL_RAMEN
+        sta CHIPSET_BASE+REG_CONTROL
+        txa
+        sta (scratchpad),y
+        iny
+        bne @loop2
+        inc scratchpad+1
+        lda scratchpad+1
+        cmp #(>end)+1
+        bne @loop2
+
+        ; Program copied, switch back to bank 1 and continue
+        lda #15
+        sta IND_REG
+        lda #1
+        sta EXEC_REG 
+        
+        jmp no_expansion
+        
+        .res ($0700-*), $FF
+
 .include "cbm2.asm"
 .include "emul.asm"
 
@@ -365,6 +436,8 @@ banner_retry:   .byt "Press Enter to retry.", $0D, $0A, 0
 banner_retry2:  .byt "Press Enter to retry, Run/Stop to configure.", $0D, $0A, 0
 
 config_filename: .byt "CONFIG  CFG",0
+
+end:
 
 .ifdef PRG
 .res 16, $AA
