@@ -10,6 +10,7 @@ SysMemTop	     = $0355
 UsrMemBot	     = $0358
 UsrMemTop	     = $035B
 TapeVec		     = $036A
+wstvec           = $03F8
 WstFlag		     = $03FA
 
 jmp_scrinit			= $E004

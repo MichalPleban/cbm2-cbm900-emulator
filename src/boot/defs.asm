@@ -1,7 +1,7 @@
 
 .bss
 
-.org $00E8
+.org $00E0
 
 sd_sector:      .res 4
 sd_ptr:         .res 2
@@ -16,7 +16,8 @@ fat32_sector_number:    .res 1
 sd_initialized: .res 1
 sd_bank:        .res 1
 bank_save:      .res 1
-
+cart_addr:      .res 2
+ram_size:       .res 1
 
 .org $0200
 

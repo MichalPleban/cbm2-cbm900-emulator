@@ -17,50 +17,243 @@
 
         jmp do_init
         jmp do_warm
-        .byt $43, $C2, $CD, $31+1
+        .byt $43, $C2, $CD, $31
+
+; --------------------------------------------------------
+; Routines to run code in the second bank
+; --------------------------------------------------------
+
+        lda CHIPSET_BASE + REG_IO_PINS
+        and #($FF - IO_BANK)
+        sta CHIPSET_BASE + REG_IO_PINS
+        ; Next instruction is executed in bank 1
+        jmp do_init
+
+        lda CHIPSET_BASE + REG_IO_PINS
+        and #($FF - IO_BANK)
+        sta CHIPSET_BASE + REG_IO_PINS
+        ; Next instruction is executed in bank 1
+        jmp do_warm
+
+        lda CHIPSET_BASE + REG_IO_PINS
+        and #($FF - IO_BANK)
+        sta CHIPSET_BASE + REG_IO_PINS
+        ; Next instruction is executed in bank 1
+        jmp $8000
+
+        lda CHIPSET_BASE + REG_IO_PINS
+        and #($FF - IO_BANK)
+        sta CHIPSET_BASE + REG_IO_PINS
+        ; Next instruction is executed in bank 1
+        jmp $8003
+
+ram_sizes:
+        .byte "  0", 0
+        .byte " 64", 0
+        .byte "128", 0
+        .byte "192", 0
+        .byte "256", 0
+        .byte "320", 0
+        .byte "384", 0
+        .byte "448", 0
+        .byte "512", 0
+        .byte "576", 0
+        .byte "640", 0
+        .byte "704", 0
+        .byte "768", 0
+        .byte "832", 0
+        .byte "894", 0
 
 ; --------------------------------------------------------
 ; Initialization routine after RESET
 ; --------------------------------------------------------
 
 do_warm:
+        ; Check if C= key pressed
+        ldx #$FF
+        stx $DF03
+        stx $DF04
+        stx $DF01
+        inx 
+        stx $DF05
+        lda #$F7
+        sta $DF00
+@check:
+        lda $DF02
+        cmp $DF02
+        bne @check
+        and #$10
+        beq do_init
         jmp $8003        
                 
 do_init:
         sei
         cld
         jsr do_ioinit
+        
         ; Clear the TPI interrupt flag which is not cleared afer reset
         sta $DE07
         lda #$F0
         sta PgmKeyBuf+1
+        
+        ; Initialize IO and screen
         jsr jmp_scrinit
+        jsr disable_ram
+        jsr MyRamTas
+        lda SysMemTop+2
+        pha
+        jsr enable_ram
         jsr MyRamTas
         jsr Delay
         jsr do_restor
         jsr jmp_scrinit
+        
+        ; Disable warm boot
         lda #$00
         sta WstFlag
         lda #$0F
         sta IndReg
+        
+        ; Re-initialize function keys
         jsr set_keys
+        
+        ; Check cartridge presence
+        ldx #$00
+        stx cart_addr
+        dex
+        stx cart_addr+1
+        jsr Check2000
+        bne @not_2000
+        lda #$20
+        sta cart_addr+1
+        bne menu_start
+@not_2000:
+        jsr Check4000
+        bne @not_4000
+        lda #$40
+        sta cart_addr+1
+        bne menu_start
+@not_4000:
+        jsr Check6000
+        bne menu_start
+        lda #$60
+        sta cart_addr+1
+        
+menu_start:
+        ; Show startup banner
         lda #<msg_init
         ldy #>msg_init
         jsr output_banner
+
+        ; Show RAM size        
+        pla
+        asl a
+        asl a
+        clc
+        adc #<ram_sizes
+        ldy #>ram_sizes
+        jsr output_banner
+        
+        ; Show menu keys
+        lda #<msg_menu
+        ldy #>msg_menu
+        jsr output_banner
+
+        ; Output cartridge location
+        bit cart_addr+1
+        bmi @no_cart
+        lda #<msg_cart
+        ldy #>msg_cart
+        jsr output_banner
+        lda cart_addr+1
+        lsr a
+        lsr a
+        lsr a
+        lsr a
+        ora #$30
+        jsr BSOUT
+        lda #$30
+        jsr BSOUT
+        lda #$30
+        jsr BSOUT
+        lda #$30
+        jsr BSOUT
+        lda #$0D
+        jsr BSOUT
+        
+@no_cart:
+
+        lda #$0D
+        jsr BSOUT
+        jsr disable_cursor
         cli
-do_init2:
+menu_loop:
         ldx #$01
         jsr CHKIN
         jsr GETIN
-        beq do_init2
-        sta $1FFF
+        beq menu_loop
         cmp #$85
         beq init_emulation
-        jmp do_init2
+        cmp #$89
+        bne not_F2
+        lda #$A5
+        sta WstFlag
+;        lda <do_warm
+;        sta wstvec
+;        lda >do_warm
+;        sta wstvec+1
+        jmp $8000
+not_F2:        
+        bit cart_addr+1
+        bmi menu_loop
+        cmp #$8A
+        bne menu_loop
+        jmp (cart_addr)
 
 init_emulation:
+        lda #<msg_load
+        ldy #>msg_load
+        jsr output_banner
         sei
-        jmp boot_file
+        
+        ; Disable expansion RAM
+        jsr disable_ram
+
+@load:
+        ; Load the file from SD card
+        jsr boot_file
+        bcc @start
+        
+        ; Display error message
+        jsr disk_error
+        jsr output_banner
+        lda #<msg_error
+        ldy #>msg_error
+        jsr output_banner
+        jsr enable_ram
+        
+        ; Wait for Return key
+        cli
+@loop:
+        ldx #$01
+        jsr CHKIN
+        jsr GETIN
+        beq @loop
+        cmp #$0D
+        bne @loop
+        jmp menu_start
+        
+@start:
+        ; Start the emulation code at $010400
+        lda #$A9
+        sta $03FC
+        lda #$01    ; LDA #$01
+        sta $03FD
+        lda #$85
+        sta $03FE
+        lda #$00    ; STA $00
+        sta $03FF
+        jmp $03FC
         
 ; --------------------------------------------------------
 ; Output string to screen
@@ -74,18 +267,40 @@ output_banner:
 @loop:
         ldy #0
         lda (screen_ptr),y
-        beq @end
+        beq disable_cursor
         jsr BSOUT
         inc screen_ptr
         bne @loop
         inc screen_ptr+1
         bne @loop
-@end:
-        rts        
-        
 
+; Disable cursor by moving it off screen
+disable_cursor:
+        lda #14
+        sta $D800
+        lda #$FF
+        sta $D801
+        lda #15
+        sta $D800
+        lda #$FF
+        sta $D801
+        rts
+
+disable_ram:
+        lda CHIPSET_BASE + REG_CONTROL
+        and #($FF - CTRL_RAMEN)
+        sta CHIPSET_BASE + REG_CONTROL
+        rts
+
+enable_ram:
+        lda CHIPSET_BASE + REG_CONTROL
+        ora #CTRL_RAMEN
+        sta CHIPSET_BASE + REG_CONTROL
+        rts
+
+        
 ; --------------------------------------------------------
-; Redefine funciton keys
+; Redefine function keys
 ; --------------------------------------------------------
         
 set_keys:        
@@ -209,18 +424,69 @@ Delay1:
         rts        
 
 ; --------------------------------------------------------
+; Check carteidge presence
+; --------------------------------------------------------
+
+Check6000:
+        lda $6009
+        cmp #$36
+        bne CheckCart1
+        ldx $6008
+        ldy $6007
+        lda $6006
+        and #$7F
+        jmp CheckCart
+Check4000:
+        lda $4009
+        cmp #$34
+        bne CheckCart1
+        ldx $4008
+        ldy $4007
+        lda $4006
+        and #$7F
+Check2000:
+        lda $2009
+        cmp #$32
+        bne CheckCart1
+        ldx $2008
+        ldy $2007
+        lda $2006
+        and #$7F
+CheckCart:
+        cpx #$CD
+        bne CheckCart1
+        cpy #$C2
+        bne CheckCart1
+        cmp #$43
+CheckCart1:
+        rts
+
+        
+; --------------------------------------------------------
 ; Boot messages
 ; --------------------------------------------------------
 
 msg_init:
-        .byt "Z8000 card boot ROM v1.0 (C) 2025 Michal Pleban", $0D, $0D
+        .byt $93, "Z8000 card boot ROM v1.0 (C) 2025 Michal Pleban", $0D, 0
+        
+msg_menu:
+        .byt " kB system RAM, 1024 kB expansion RAM", $0D, $0D
         .byt " [F1] - boot Commodore 900 emulation", $0D
         .byt " [F2] - boot into BASIC", $0D
         .byt 0
 
+msg_cart:
+        .byt " [F4] - boot cartridge at $", 0
+        
+msg_load:
+        .byt "Loading file CBM2EMUL.BIN... ", 0
+        
+msg_error:
+        .byt $0D, "Press Return to continue", 0
+        
 func_keys:
         .byt $85, $89, $86, $8A, $87, $8B, $88, $8C
-
+        
 .include "boot.asm"
 
 .res ($2000-*),$FF

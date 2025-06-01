@@ -41,11 +41,6 @@ boot_file:
         jsr fat32_scan_file
         bcs @error        
         
-        ; Disable expansion RAM
-        lda $D906
-        and #$FD
-        sta $D906
-        
         ; Load file into memory
         lda #0
         sta fat32_pointers+FILE_SECTOR
@@ -111,21 +106,12 @@ boot_file:
         
 @error:
         ; Report error and return
-        sta $1FFF
-        cli
+        sec
         rts
         
 @ok:
-        ; Start the emulation code at $010400
-        lda #$A9
-        sta $03FC
-        lda #$01    ; LDA #$01
-        sta $03FD
-        lda #$85
-        sta $03FE
-        lda #$00    ; STA $00
-        sta $03FF
-        jmp $03FC
+        clc        
+        rts
 
 sd_output:
         sta CHIPSET_BASE + REG_SD_CARD
@@ -185,6 +171,68 @@ sd_write_loop:
 emul_filename:
         .byt $45, $4D, $55, $4C, $43, $42, $4D, $32, $42, $49, $4e ; "EMULCBM2BIN"
 
+; ------------------------------------------------------------------------
+; Display disk error message
+; Input:
+;       A - error number
+; Output:
+;       A:Y - pointer to error text
+;       X - destroyed
+; ------------------------------------------------------------------------
+
+disk_error:
+        sta scratchpad
+        ldx #0
+        lda #<disk_errors
+        sta screen_ptr
+        lda #>disk_errors
+        sta screen_ptr+1
+@loop:
+        lda (screen_ptr,x)
+        beq @found
+        cmp scratchpad
+        beq @found
+@loop2:
+        inc screen_ptr
+        bne @notzero
+        inc screen_ptr+1
+@notzero:
+        lda (screen_ptr,x)
+        bne @loop2
+        inc screen_ptr
+        bne @loop
+        inc screen_ptr+1
+        bne @loop
+@found:
+        inc screen_ptr
+        bne @notzero2
+        inc screen_ptr+1
+@notzero2:
+        lda screen_ptr
+        ldy screen_ptr+1
+        rts
+
+        
+disk_errors:
+        .byt $01, "SD card not found", $00
+        .byt $02, "SD card init error", $00
+        .byt $03, "SD card init error", $00
+        .byt $04, "SD card is not SDHC", $00
+        .byt $05, "SD card init error", $00
+        .byt $11, "Sector read error", $00
+        .byt $12, "Sector read error", $00
+        .byt $21, "Sector write error", $00
+        .byt $22, "Sector write error", $00
+        .byt $23, "Sector write error", $00
+        .byt $31, "Master boot record not found", $00
+        .byt $32, "Partition is not FAT32", $00
+        .byt $33, "FAT32 boot sector not found", $00
+        .byt $41, "File not found", $00
+        .byt $51, "File is too fragmented", $00
+        .byt $52, "Seek past file end", $00
+        .byt $00, "Unknown error", $00
+
+        
 .include "../sd/init.asm"
 .include "../sd/access.asm"
 .include "../sd/fat32.asm"

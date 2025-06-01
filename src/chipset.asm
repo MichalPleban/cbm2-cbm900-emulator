@@ -32,3 +32,4 @@ CTRL_VI = $80
 ; I/O bits
 
 IO_LED = $01
+IO_BANK = $08
