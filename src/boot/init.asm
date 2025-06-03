@@ -39,7 +39,7 @@
         and #($FF - IO_BANK)
         sta CHIPSET_BASE + REG_IO_PINS
         ; Next instruction is executed in bank 1
-        jmp $8000
+        jmp InitBASIC
 
         lda CHIPSET_BASE + REG_IO_PINS
         and #($FF - IO_BANK)
@@ -107,6 +107,8 @@ do_init:
         jsr Delay
         jsr do_restor
         jsr jmp_scrinit
+        pla
+        sta mem_size
         
         ; Disable warm boot
         lda #$00
@@ -146,7 +148,7 @@ menu_start:
         jsr output_banner
 
         ; Show RAM size        
-        pla
+        lda mem_size
         asl a
         asl a
         clc
@@ -202,8 +204,10 @@ menu_loop:
 ;        sta wstvec
 ;        lda >do_warm
 ;        sta wstvec+1
-        jmp $8000
+        jmp InitBASIC
 not_F2:        
+        cmp #$86
+        beq init_wedge
         bit cart_addr+1
         bmi menu_loop
         cmp #$8A
@@ -221,9 +225,62 @@ init_emulation:
 
 @load:
         ; Load the file from SD card
+        lda #<emul_filename
+        sta filename
+        lda #>emul_filename
+        sta filename+1
+        ldx #$01
+        stx load_addr
+        stx load_addr+2
+        dex
+        stx load_addr+1
         jsr boot_file
-        bcc @start
+        bcs display_error
         
+        ; Start the emulation code at $010400
+        lda #$A9
+        sta $03FC
+        lda #$01    ; LDA #$01
+        sta $03FD
+        lda #$85
+        sta $03FE
+        lda #$00    ; STA $00
+        sta $03FF
+        jmp $03FC
+        
+init_wedge:
+        lda #<msg_load2
+        ldy #>msg_load2
+        jsr output_banner
+        sei
+        
+@load:
+        ; Load the file from SD card
+        lda #<wedge_filename
+        sta filename
+        lda #>wedge_filename
+        sta filename+1
+        lda #$00
+        sta load_addr+2
+        lda #$FE
+        sta load_addr
+        lda #$03
+        sta load_addr+1
+        jsr boot_file
+        bcs display_error
+        
+        ; Start the wedge code at $000400
+        lda #$A9
+        sta $03FC
+        lda #$00    ; LDA #$00
+        sta $03FD
+        lda #$85
+        sta $03FE
+        lda #$00    ; STA $00
+        sta $03FF
+        jmp $03FC
+
+display_error:        
         ; Display error message
         jsr disk_error
         jsr output_banner
@@ -243,18 +300,8 @@ init_emulation:
         bne @loop
         jmp menu_start
         
-@start:
-        ; Start the emulation code at $010400
-        lda #$A9
-        sta $03FC
-        lda #$01    ; LDA #$01
-        sta $03FD
-        lda #$85
-        sta $03FE
-        lda #$00    ; STA $00
-        sta $03FF
-        jmp $03FC
-        
+
+                
 ; --------------------------------------------------------
 ; Output string to screen
 ; --------------------------------------------------------
@@ -473,13 +520,16 @@ msg_menu:
         .byt " kB system RAM, 1024 kB expansion RAM", $0D, $0D
         .byt " [F1] - boot Commodore 900 emulation", $0D
         .byt " [F2] - boot into BASIC", $0D
+        .byt " [F3] - boot wedge program", $0D
         .byt 0
 
 msg_cart:
         .byt " [F4] - boot cartridge at $", 0
         
 msg_load:
-        .byt "Loading file CBM2EMUL.BIN... ", 0
+        .byt "Loading file EMULCBM2.PRG... ", 0
+msg_load2:
+        .byt "Loading file WEDGE.PRG... ", 0
         
 msg_error:
         .byt $0D, "Press Return to continue", 0
@@ -489,4 +539,128 @@ func_keys:
         
 .include "boot.asm"
 
+emul_filename:
+        .byt $45, $4D, $55, $4C, $43, $42, $4D, $32, $50, $52, $47 ; "EMULCBM2PRG"
+wedge_filename:
+        .byt $57, $45, $44, $47, $45, $20, $20, $20, $50, $52, $47 ; "WEDGE   PRG"
+
+InitBASIC:
+        bit $8001
+        bpl Init128
+
+; --------------------------------------------------------
+; Initialize BASIC 256
+; --------------------------------------------------------
+Init256:
+        jsr $bb29
+        ldx #2
+Init256l1:
+        lda $b460,x
+        sta $02,x
+        dex
+        bpl Init256l1
+        sta $61
+        ldx #4
+Init256l2:
+        lda $bb34,x
+        sta $0259,x
+        dex
+        bne Init256l2
+        stx $78
+        stx $1a
+        stx $16
+        stx $0258
+        stx $1d
+        dex
+        stx $1e
+        stx $1f
+        inx
+        stx $31
+        ldx #$80
+        stx $32
+        sec
+        jsr $ff9c
+        stx $39
+        sty $3a
+        stx $35
+        sty $36
+        stx $2d
+        sty $2e
+        jsr $b9f5
+        jsr $b9ee
+        ldy #0
+        tya
+        sta ($2d),y
+        inc $2d
+        bne Init256l3
+        inc $2e
+Init256l3:
+        ldx #$26
+        jsr $a32f
+        jsr $8a12
+        ldx #$39
+        ldy #$bb
+        jsr $ff6f
+        lda #<do_warm
+        sta wstvec
+        lda #>do_warm
+        sta wstvec+1
+        cli
+        jmp $85b8
+
+; --------------------------------------------------------
+; Initialize BASIC 128
+; --------------------------------------------------------
+Init128:
+        jsr $bbbc
+        ldx #2
+Init128l1:
+        lda $b4fe,x
+        sta $02,x
+        dex
+        bpl Init128l1
+        sta $61
+        ldx #4
+Init128l2:
+        lda $bbc7,x
+        sta $0259,x
+        dex
+        bne Init128l2
+        stx $78
+        stx $1a
+        stx $16
+        stx $0258
+        stx $1d
+        dex
+        stx $1e
+        stx $1f
+        sec
+        jsr $ff9c
+        stx $31
+        sty $32
+        stx $2d
+        sty $2e
+        jsr $ba93
+        jsr $ba8c
+        ldy #0
+        tya
+        sta ($2d),y
+        inc $2d
+        bne Init128l3
+        inc $2e
+Init128l3:
+        ldx #$26
+        jsr $a3c3
+        jsr $8a2b
+        ldx #$cc
+        ldy #$bb
+        jsr $ff6f
+        lda #<do_warm
+        sta wstvec
+        lda #>do_warm
+        sta wstvec+1
+        cli
+        jmp $85c0
+
+                
 .res ($2000-*),$FF

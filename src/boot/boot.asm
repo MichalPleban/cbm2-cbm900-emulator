@@ -30,8 +30,8 @@ boot_file:
         bcc @initialized
         jmp @error
 @initialized:
-        lda #<emul_filename
-        ldy #>emul_filename
+        lda filename
+        ldy filename+1
         jsr fat32_find_file
         bcc @initialize_ok
         jmp @error        
@@ -45,8 +45,9 @@ boot_file:
         lda #0
         sta fat32_pointers+FILE_SECTOR
         sta fat32_pointers+FILE_SECTOR+1
+        lda load_addr+1
         sta fat32_ptr_1+1
-        lda #1
+        lda load_addr
         sta fat32_ptr_1
         
 @loop:
@@ -74,7 +75,7 @@ boot_file:
         bcs @error
         
         ; Copy buffer to the RAM
-        lda #$01
+        lda load_addr+2
         sta $01
         ldy #0
         lda fat32_ptr_1+1
@@ -168,8 +169,6 @@ sd_write_loop:
         sta $01
         rts
 
-emul_filename:
-        .byt $45, $4D, $55, $4C, $43, $42, $4D, $32, $42, $49, $4e ; "EMULCBM2BIN"
 
 ; ------------------------------------------------------------------------
 ; Display disk error message

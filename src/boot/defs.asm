@@ -17,7 +17,9 @@ sd_initialized: .res 1
 sd_bank:        .res 1
 bank_save:      .res 1
 cart_addr:      .res 2
-ram_size:       .res 1
+mem_size:       .res 1
+filename:       .res 2
+load_addr:      .res 3
 
 .org $0200
 
