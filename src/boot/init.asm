@@ -24,25 +24,25 @@
 ; --------------------------------------------------------
 
         lda CHIPSET_BASE + REG_IO_PINS
-        and #($FF - IO_BANK)
+        ora #IO_BANK
         sta CHIPSET_BASE + REG_IO_PINS
         ; Next instruction is executed in bank 1
         jmp do_init
 
         lda CHIPSET_BASE + REG_IO_PINS
-        and #($FF - IO_BANK)
+        ora #IO_BANK
         sta CHIPSET_BASE + REG_IO_PINS
         ; Next instruction is executed in bank 1
         jmp do_warm
 
         lda CHIPSET_BASE + REG_IO_PINS
-        and #($FF - IO_BANK)
+        ora #IO_BANK
         sta CHIPSET_BASE + REG_IO_PINS
         ; Next instruction is executed in bank 1
         jmp InitBASIC
 
         lda CHIPSET_BASE + REG_IO_PINS
-        and #($FF - IO_BANK)
+        ora #IO_BANK
         sta CHIPSET_BASE + REG_IO_PINS
         ; Next instruction is executed in bank 1
         jmp $8003
@@ -664,3 +664,9 @@ Init128l3:
 
                 
 .res ($2000-*),$FF
+
+.define ROM
+
+.ifndef PRG
+.include "jump.asm"
+.endif

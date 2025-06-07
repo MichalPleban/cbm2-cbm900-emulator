@@ -6,8 +6,6 @@
 .ifdef PRG
 .include "cbm2/stub.asm"
 
-
-
 .res ($0400-*), $FF
 .endif
 
