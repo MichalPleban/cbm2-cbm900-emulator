@@ -27,12 +27,12 @@ bin/emulate.prg: $(SRC)
 	rm src/main.o
 
 bin/wedge.bin: $(SRC_WEDGE)
-	ca65 src/wedge/wedge.asm
+	ca65 -t c64 src/wedge/wedge.asm
 	ld65 src/wedge/wedge.o -C src/wedge/wedge.cfg -o bin/wedge.bin
 	rm src/wedge/wedge.o
 
 bin/wedge.prg: $(SRC_WEDGE)
-	ca65 src/wedge/wedge.asm -DPRG
+	ca65 -t c64 src/wedge/wedge.asm -DPRG
 	ld65 src/wedge/wedge.o -C src/wedge/wedge.cfg -o bin/wedge.prg
 	rm src/wedge/wedge.o
 

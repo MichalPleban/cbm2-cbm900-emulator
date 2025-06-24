@@ -16,6 +16,7 @@
 ; --------------------------------------------------------
 
         jmp do_init
+vec_warm:
         jmp do_warm
         .byt $43, $C2, $CD, $31
 
@@ -23,29 +24,50 @@
 ; Routines to run code in the second bank
 ; --------------------------------------------------------
 
-        lda CHIPSET_BASE + REG_IO_PINS
-        ora #IO_BANK
-        sta CHIPSET_BASE + REG_IO_PINS
-        ; Next instruction is executed in bank 1
+        ; Cold reset in bank 0
+        sei
+        nop
+        nop
+        nop
+        nop
+        nop
+        nop
+        nop
+        nop
         jmp do_init
 
-        lda CHIPSET_BASE + REG_IO_PINS
-        ora #IO_BANK
-        sta CHIPSET_BASE + REG_IO_PINS
-        ; Next instruction is executed in bank 1
+        ; Warm reset in bank 0
+        sei
+        nop
+        nop
+        nop
+        nop
+        nop
+        nop
+        nop
+        nop
         jmp do_warm
 
+        ; Wedge start in bank 1
+start_wedge:
+        sei
         lda CHIPSET_BASE + REG_IO_PINS
         ora #IO_BANK
         sta CHIPSET_BASE + REG_IO_PINS
-        ; Next instruction is executed in bank 1
-        jmp InitBASIC
+        ; Next instruction is executed in bank 1 (wedge start)
+        nop
+        nop
+        nop
 
+        ; Wedge warm start in bank 1
+        sei
         lda CHIPSET_BASE + REG_IO_PINS
         ora #IO_BANK
         sta CHIPSET_BASE + REG_IO_PINS
-        ; Next instruction is executed in bank 1
-        jmp $8003
+        ; Next instruction is executed in bank 1 (wedge warm reset)
+        nop
+        nop
+        nop
 
 ram_sizes:
         .byte "  0", 0
@@ -84,12 +106,29 @@ do_warm:
         bne @check
         and #$10
         beq do_init
+        ; Reset IRQ vector if it points to ROM code in bank 1
+        lda $0301
+        and #$F0
+        cmp #$10
+        bne @dont_reset_irq
+        lda #$fb
+        sta $0301
+        lda #$e9
+        sta $0300
+@dont_reset_irq:
+        cli
         jmp $8003        
                 
 do_init:
         sei
         cld
         jsr do_ioinit
+        
+        ; Clear the chipset registers
+        lda #$00
+        sta CHIPSET_BASE + REG_IO_PINS
+        lda #$03 ; Reset Z8000 + enable external RAM
+        sta CHIPSET_BASE + REG_CONTROL
         
         ; Clear the TPI interrupt flag which is not cleared afer reset
         sta $DE07
@@ -200,10 +239,6 @@ menu_loop:
         bne not_F2
         lda #$A5
         sta WstFlag
-;        lda <do_warm
-;        sta wstvec
-;        lda >do_warm
-;        sta wstvec+1
         jmp InitBASIC
 not_F2:        
         cmp #$86
@@ -268,17 +303,7 @@ init_wedge:
         sta load_addr+1
         jsr boot_file
         bcs display_error
-        
-        ; Start the wedge code at $000400
-        lda #$A9
-        sta $03FC
-        lda #$00    ; LDA #$00
-        sta $03FD
-        lda #$85
-        sta $03FE
-        lda #$00    ; STA $00
-        sta $03FF
-        jmp $03FC
+        jmp start_wedge
 
 display_error:        
         ; Display error message
@@ -456,7 +481,7 @@ LFAD8:
 ; --------------------------------------------------------
 
 Delay:
-        lda #3
+        lda #4
         ldy #0
         ldx #0
 Delay1:
@@ -601,9 +626,9 @@ Init256l3:
         ldx #$39
         ldy #$bb
         jsr $ff6f
-        lda #<do_warm
+        lda #<vec_warm
         sta wstvec
-        lda #>do_warm
+        lda #>vec_warm
         sta wstvec+1
         cli
         jmp $85b8
@@ -655,9 +680,9 @@ Init128l3:
         ldx #$cc
         ldy #$bb
         jsr $ff6f
-        lda #<do_warm
+        lda #<vec_warm
         sta wstvec
-        lda #>do_warm
+        lda #>vec_warm
         sta wstvec+1
         cli
         jmp $85c0

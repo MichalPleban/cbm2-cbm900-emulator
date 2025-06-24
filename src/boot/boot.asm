@@ -169,7 +169,6 @@ sd_write_loop:
         sta $01
         rts
 
-
 ; ------------------------------------------------------------------------
 ; Display disk error message
 ; Input:
