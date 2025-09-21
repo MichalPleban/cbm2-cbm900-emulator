@@ -12,6 +12,8 @@
         jmp wedge_warm
         jmp wedge_irq
         jmp wedge_nmi
+        jmp wedge_cbmlink_serial
+        jmp jump_0400
 
 wedge_start:
         sei
@@ -21,6 +23,7 @@ wedge_start:
         lda IndReg
         pha
         jsr detect_basic
+        ; From now on, IndReg = $0F
         bit basic_type
         bpl @banner_128
         lda #<banner_256
@@ -35,6 +38,7 @@ wedge_start:
         ldy #>banner_wedge
         jsr print_string
         jsr setup_warmstart
+        jsr setup_func_keys
         jsr setup_wedge_irq
         pla
         sta IndReg
@@ -84,7 +88,9 @@ NMI:
         rti
 
 ; --------------------------------------------------------
-; Set up warm start at $102B
+; Set up warm start at $102F
+; This location in the EPROM page 1 call the wedge
+;  code at $0403 (jmp wedge_warm)
 ; --------------------------------------------------------
 
 setup_warmstart:
@@ -129,6 +135,72 @@ wedge_irq:
 wedge_nmi:
         jmp jump_rti
 
+
+; --------------------------------------------------------
+; Start CBMLINK 
+; --------------------------------------------------------
+
+wedge_cbmlink_serial:
+
+        lda #<cbmlink_serial_bin
+        sta src_ptr
+        lda #>cbmlink_serial_bin
+        sta src_ptr+1
+        lda #$00
+        sta mem_ptr
+        lda #$04
+        sta mem_ptr+1
+        ldx #0
+        ldy #0
+        lda #$0F
+        sta IndReg
+@loop1:
+        lda (src_ptr,x)
+        sta (mem_ptr),y
+        inc src_ptr
+        bne @notzero1
+        inc src_ptr+1
+@notzero1:
+        iny
+        bne @loop1
+        inc mem_ptr+1
+@loop2:
+        lda (src_ptr,x)
+        sta (mem_ptr),y
+        inc src_ptr
+        bne @notzero2
+        inc src_ptr+1
+@notzero2:
+        iny
+        bne @loop2
+        jmp jump_0400
+
+; --------------------------------------------------------
+; Redefine function keys
+; --------------------------------------------------------
+
+setup_func_keys:
+        lda #$F0
+        sta mem_ptr
+        lda #$00
+        sta mem_ptr+1
+        tay
+        lda #key_f11_end - key_f11
+        sta (mem_ptr),y
+        iny
+        lda #<key_f11
+        sta (mem_ptr),y
+        iny
+        lda #>key_f11
+        sta (mem_ptr),y
+        iny
+        lda $00
+        sta (mem_ptr),y
+        lda #$F0
+        ldy #11
+        jsr jump_funkey
+        rts
+                        
 ; --------------------------------------------------------
 ; Print null terminated string
 ; --------------------------------------------------------
@@ -149,7 +221,7 @@ print_string:
         rts
 
 ; --------------------------------------------------------
-; Startup banners
+; Startup banners and other texts
 ; --------------------------------------------------------
 
 banner_256:
@@ -157,8 +229,13 @@ banner_256:
 banner_128:
         .byt $93, "*** commodore basic 128, v4.0 ***", $0D, 0
 banner_wedge:
-        .byt "dummy wedge installed in bank 0", $0D, 0
+        .byt "simple bank 0 wedge v0.1 installed", $0D
+        .byt "f11 - cbmlink serial", $0D, 0
 
+key_f11:
+        .byt "sys4416", $0D
+key_f11_end:
+        
 ; --------------------------------------------------------
 ; Return from bank 15 call - set Z flag accordingly
 ; --------------------------------------------------------
@@ -168,7 +245,7 @@ banner_wedge:
 CallReturn:
         beq @zero
         ; Zero flag not set
-        ; $00 contains $00 - incrementing will yield $FF with Z=0
+        ; CPU register at $00 contains $00 - incrementing will yield $FF with Z=0
         dec $00
         ; Continued from bank 15 - no need to do anything
         rts
@@ -187,7 +264,7 @@ CallReturn:
         ; Restore flags with Z=1
         plp
         rts
-                
+
 .res ($1120-*),$FF
 
 .macro  CALL address
@@ -226,9 +303,31 @@ jump_rti:
         CALL $0400+3*9
 jump_8003:
         CALL $0400+3*10
+jump_0400:
+        CALL $0400+3*11
 jump_bsout:
-        CALL $0400+3*11       
+        CALL $0400+3*12
+jump_getin:
+        CALL $0400+3*13
+jump_ckout:
+        CALL $0400+3*14
+jump_chkin:
+        CALL $0400+3*15
+jump_scrinit:
+        CALL $0400+3*16
+jump_funkey:
+        CALL $0400+3*17
         
+cbmlink_serial_bin:
+        .incbin "cbmlink/serial.bin"
+cbmlink_serial_end:
+                        
+cbmlink_c2n232_bin:
+        .incbin "cbmlink/c2n232.bin"
+cbmlink_c2n232_end:
+                        
+
+                
 .ifdef PRG
 .res 16, $AA
 .endif

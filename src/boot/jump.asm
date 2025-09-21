@@ -21,7 +21,7 @@
 ; Routines to run code in the first bank
 ; --------------------------------------------------------
 
-        ; Cold reset in bank 0
+        ; Cold reset in EPROM page 0
 cold_reset:
         sei
         lda CHIPSET_BASE + REG_IO_PINS
@@ -32,7 +32,7 @@ cold_reset:
         nop
         nop
 
-        ; Warm reset in bank 0
+        ; Warm reset in EPROM page 0
 warm_reset:
         sei
         lda CHIPSET_BASE + REG_IO_PINS
@@ -43,7 +43,7 @@ warm_reset:
         nop
         nop
 
-        ; Wedge start in bank 1 - points to wedge function #0
+        ; Wedge start in EPROM page 1 - points to wedge function #0
         sei
         nop
         nop
@@ -55,7 +55,7 @@ warm_reset:
         nop
         jmp jump_wedge_0
 
-        ; Warm rest in bank 1 - points to wedge function #1
+        ; Warm reset in EPROM page 1 - points to wedge function #1
         sei
         nop
         nop
@@ -225,6 +225,7 @@ CallReturn:
         inc $00
         ; Continued from bank 0 - need to set zero flag
         ; Decrement $01 value to yield $00 with Z=1
+        ; This works ONLY if the code is in EPROM, so that the value stays at $01!
         dec @one
         rts
 @one:
@@ -278,7 +279,6 @@ jump_wedge_4:
         CALL InitBASICEnd
 jump_wedge_5:
         CALL CallIRQ
-;        CALL Test
 jump_wedge_6:
         CALL CallNMI        
 jump_wedge_7:
@@ -290,7 +290,19 @@ jump_wedge_9:
 jump_wedge_10:
         JUMP $8003              ; Warm reset
 jump_wedge_11:
+        CALL $0400              ; Start cbmlink
+jump_wedge_12:
         CALL $FFD2              ; BSOUT
+jump_wedge_13:
+        CALL $FFE4              ; GETIN
+jump_wedge_14:
+        CALL $FFC9              ; CKOUT
+jump_wedge_15:
+        CALL $FFC6              ; CHKIN
+jump_wedge_16:
+        CALL $E004              ; scrinit
+jump_wedge_17:
+        CALL $E022              ; funkey
         
         
                 
