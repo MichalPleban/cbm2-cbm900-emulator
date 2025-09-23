@@ -88,7 +88,7 @@ NMI:
         rti
 
 ; --------------------------------------------------------
-; Set up warm start at $102F
+; Set up warm start at $102E
 ; This location in the EPROM page 1 call the wedge
 ;  code at $0403 (jmp wedge_warm)
 ; --------------------------------------------------------
@@ -99,16 +99,16 @@ setup_warmstart:
         lda #$03
         sta mem_ptr+1
         ldy #0
-        lda #$2f
+        lda #$2E
         sta (mem_ptr),y
         iny
         lda #$10
         sta (mem_ptr),y
         iny
-        lda #$a5
+        lda #$A5
         sta (mem_ptr),y
         iny
-        lda #$5a
+        lda #$5A
         sta (mem_ptr),y
         rts
 
@@ -198,7 +198,7 @@ setup_func_keys:
         sta (mem_ptr),y
         lda #$F0
         ldy #11
-        jsr jump_funkey
+        jsr jump_do_funkey
         rts
                         
 ; --------------------------------------------------------
@@ -212,7 +212,7 @@ print_string:
         ldx #0
         lda (screen_ptr,x)
         beq @end
-        jsr jump_bsout
+        jsr jump_bsout_crt
         inc screen_ptr
         bne @loop
         inc screen_ptr+1
@@ -290,7 +290,7 @@ jump_bas_init_1:
 jump_bas_init_2:
         JUMP $0400+3*3          ; Custom NMI handler
 jump_bas_init_3:
-        CALL $0400+3*4
+        CALL $0400+3*4          ; Start CBMLINK serial
 jump_irq:
         CALL $0400+3*5
 jump_nmi:
@@ -305,19 +305,165 @@ jump_8003:
         CALL $0400+3*10
 jump_0400:
         CALL $0400+3*11
-jump_bsout:
+jump_jsrseg:
         CALL $0400+3*12
-jump_getin:
+jump_setwst:
         CALL $0400+3*13
-jump_ckout:
+jump_runcopro:
         CALL $0400+3*14
-jump_chkin:
-        CALL $0400+3*15
-jump_scrinit:
-        CALL $0400+3*16
 jump_funkey:
+        CALL $0400+3*15
+jump_copro:
+        CALL $0400+3*16
+jump_ioinit:
         CALL $0400+3*17
+jump_scrinit:
+        CALL $0400+3*18
+jump_getmem:
+        CALL $0400+3*19
+jump_vector:
+        CALL $0400+3*20
+jump_restor:
+        CALL $0400+3*21
+jump_setfnr:
+        CALL $0400+3*22
+jump_chgfpar:
+        CALL $0400+3*23
+jump_setst:
+        CALL $0400+3*24
+jump_second:
+        CALL $0400+3*25
+jump_tksa:
+        CALL $0400+3*26
+jump_memtop:
+        CALL $0400+3*27
+jump_membot:
+        CALL $0400+3*28
+jump_scnkey:
+        CALL $0400+3*29
+jump_settmo:
+        CALL $0400+3*30
+jump_acptr:
+        CALL $0400+3*31
+jump_ciout:
+        CALL $0400+3*32
+jump_untalk:
+        CALL $0400+3*33
+jump_unlsn:
+        CALL $0400+3*34
+jump_listen:
+        CALL $0400+3*35
+jump_talk:
+        CALL $0400+3*36
+jump_readst:
+        CALL $0400+3*37
+jump_setlfs:
+        CALL $0400+3*38
+jump_setnam:
+        CALL $0400+3*39
+jump_open:
+        CALL $0400+3*40
+jump_close:
+        CALL $0400+3*41
+jump_chkin:
+        CALL $0400+3*42
+jump_chkout:
+        CALL $0400+3*43
+jump_clrch:
+        CALL $0400+3*44
+jump_basin:
+        CALL $0400+3*45
+jump_bsout:
+        CALL $0400+3*46
+jump_load:
+        CALL $0400+3*47
+jump_save:
+        CALL $0400+3*48
+jump_settim:
+        CALL $0400+3*49
+jump_rdtim:
+        CALL $0400+3*50
+jump_chkstop:
+        CALL $0400+3*51
+jump_getin:
+        CALL $0400+3*52
+jump_clall:
+        CALL $0400+3*53
+jump_udtim:
+        CALL $0400+3*54
+jump_screen:
+        CALL $0400+3*55
+jump_plot:
+        CALL $0400+3*56
+jump_iobase:
+        CALL $0400+3*57
+jump_monitor:
+        CALL $0400+3*58
+jump_do_scrinit:
+        CALL $0400+3*59
+jump_getkey:
+        CALL $0400+3*60
+jump_basin_crt:
+        CALL $0400+3*61
+jump_bsout_crt:
+        CALL $0400+3*62
+jump_do_screen:
+        CALL $0400+3*63
+jump_do_scnkey:
+        CALL $0400+3*64
+jump_setcurs:
+        CALL $0400+3*65
+jump_do_plot:
+        CALL $0400+3*66
+jump_do_iobase:
+        CALL $0400+3*67
+jump_escseq:
+        CALL $0400+3*68
+jump_do_funkey:
+        CALL $0400+3*69
+jump_do_second:
+        CALL $0400+3*70
+jump_do_tksa:
+        CALL $0400+3*71
+jump_do_acptr:
+        CALL $0400+3*72
+jump_do_ciout:
+        CALL $0400+3*73
+jump_do_untlk:
+        CALL $0400+3*74
+jump_do_unlsn:
+        CALL $0400+3*75
+jump_do_listen:
+        CALL $0400+3*76
+jump_do_talk:
+        CALL $0400+3*77
+jump_do_open:
+        CALL $0400+3*78
+jump_do_close:
+        CALL $0400+3*79
+jump_do_chkin:
+        CALL $0400+3*80
+jump_do_ckout:
+        CALL $0400+3*81
+jump_do_clrch:
+        CALL $0400+3*82
+jump_do_basin:
+        CALL $0400+3*83
+jump_do_bsout:
+        CALL $0400+3*84
+jump_do_load:
+        CALL $0400+3*85
+jump_do_save:
+        CALL $0400+3*86
+jump_do_stop:
+        CALL $0400+3*87
+jump_do_getin:
+        CALL $0400+3*88
+jump_do_clall:
+        CALL $0400+3*89
+
         
+                
 cbmlink_serial_bin:
         .incbin "cbmlink/serial.bin"
 cbmlink_serial_end:

@@ -292,17 +292,161 @@ jump_wedge_10:
 jump_wedge_11:
         CALL $0400              ; Start cbmlink
 jump_wedge_12:
-        CALL $FFD2              ; BSOUT
+        CALL $FF6C              ; JSRSEG
 jump_wedge_13:
-        CALL $FFE4              ; GETIN
+        CALL $FF6F              ; SETWST
 jump_wedge_14:
-        CALL $FFC9              ; CKOUT
+        CALL $FF72              ; RUNCOPRO
 jump_wedge_15:
-        CALL $FFC6              ; CHKIN
+        CALL $FF75              ; FUNKEY
 jump_wedge_16:
-        CALL $E004              ; scrinit
+        CALL $FF78              ; COPRO
 jump_wedge_17:
-        CALL $E022              ; funkey
+        CALL $FF7B              ; IOINIT
+jump_wedge_18:
+        CALL $FF7E              ; SCRINIT
+jump_wedge_19:
+        CALL $FF81              ; GETMEM
+jump_wedge_20:
+        CALL $FF84              ; VECTOR
+jump_wedge_21:
+        CALL $FF87              ; RESTOR
+jump_wedge_22:
+        CALL $FF8A              ; SETFNR
+jump_wedge_23:
+        CALL $FF8D              ; CHGFPAR
+jump_wedge_24:
+        CALL $FF90              ; SETST
+jump_wedge_25:
+        CALL $FF93              ; SECOND
+jump_wedge_26:
+        CALL $FF96              ; TKSA
+jump_wedge_27:
+        CALL $FF99              ; MEMTOP
+jump_wedge_28:
+        CALL $FF9C              ; MEMBOT
+jump_wedge_29:
+        CALL $FF9F              ; SCNKEY
+jump_wedge_30:
+        CALL $FFA2              ; SETTMO
+jump_wedge_31:
+        CALL $FFA5              ; ACPTR
+jump_wedge_32:
+        CALL $FFA8              ; CIOUT
+jump_wedge_33:
+        CALL $FFAB              ; UNTALK
+jump_wedge_34:
+        CALL $FFAE              ; UNLSN
+jump_wedge_35:
+        CALL $FFB1              ; LISTEN
+jump_wedge_36:
+        CALL $FFB4              ; TALK
+jump_wedge_37:
+        CALL $FFB7              ; READST
+jump_wedge_38:
+        CALL $FFBA              ; SETLFS
+jump_wedge_39:
+        CALL $FFBD              ; SETNAM
+jump_wedge_40:
+        CALL $FFC0              ; OPEN
+jump_wedge_41:
+        CALL $FFC3              ; CLOSE
+jump_wedge_42:
+        CALL $FFC6              ; CHKIN
+jump_wedge_43:
+        CALL $FFC9              ; CHKOUT
+jump_wedge_44:
+        CALL $FFCC              ; CLRCH
+jump_wedge_45:
+        CALL $FFCF              ; BASIN
+jump_wedge_46:
+        CALL $FFD2              ; BSOUT
+jump_wedge_47:
+        CALL $FFD5              ; LOAD
+jump_wedge_48:
+        CALL $FFD8              ; SAVE
+jump_wedge_49:
+        CALL $FFDB              ; SETTIM
+jump_wedge_50:
+        CALL $FFDE              ; RDTIM
+jump_wedge_51:
+        CALL $FFE1              ; CHKSTOP
+jump_wedge_52:
+        CALL $FFE4              ; GETIN
+jump_wedge_53:
+        CALL $FFE7              ; CLALL
+jump_wedge_54:
+        CALL $FFEA              ; UDTIM
+jump_wedge_55:
+        CALL $FFED              ; SCREEN
+jump_wedge_56:
+        CALL $FFF0              ; PLOT
+jump_wedge_57:
+        CALL $FFF3              ; IOBASE
+jump_wedge_58:
+        CALL $E000              ; monitor
+jump_wedge_59:
+        CALL $E004              ; do_scrinit
+jump_wedge_60:
+        CALL $E007              ; getkey
+jump_wedge_61:
+        CALL $E00A              ; basin_crt
+jump_wedge_62:
+        CALL $E00D              ; bsout_crt
+jump_wedge_63:
+        CALL $E010              ; do_screen
+jump_wedge_64:
+        CALL $E013              ; do_scnkey
+jump_wedge_65:
+        CALL $E016              ; setcurs
+jump_wedge_66:
+        CALL $E019              ; do_plot
+jump_wedge_67:
+        CALL $E01C              ; do_iobase
+jump_wedge_68:
+        CALL $E01F              ; escseq
+jump_wedge_69:
+        CALL $E022              ; do_funkey
+jump_wedge_70:
+        CALL $F274              ; do_second
+jump_wedge_71:
+        CALL $F280              ; do_tksa
+jump_wedge_72:
+        CALL $F30A              ; do_acptr
+jump_wedge_73:
+        CALL $F297              ; do_ciout
+jump_wedge_74:
+        CALL $F2AB              ; do_untlk
+jump_wedge_75:
+        CALL $F2AF              ; do_unlsn
+jump_wedge_76:
+        CALL $F234              ; do_listen
+jump_wedge_77:
+        CALL $F230              ; do_talk
+jump_wedge_78:
+        CALL $F6BF              ; do_open
+jump_wedge_79:
+        CALL $F5ED              ; do_close
+jump_wedge_80:
+        CALL $F549              ; do_chkin
+jump_wedge_81:
+        CALL $F5A3              ; do_ckout
+jump_wedge_82:
+        CALL $F6A6              ; do_clrch
+jump_wedge_83:
+        CALL $F49C              ; do_basin
+jump_wedge_84:
+        CALL $F4EE              ; do_bsout
+jump_wedge_85:
+        CALL $F746              ; do_load
+jump_wedge_86:
+        CALL $F84C              ; do_save
+jump_wedge_87:
+        CALL $F96B              ; do_stop
+jump_wedge_88:
+        CALL $F43D              ; do_getin
+jump_wedge_89:
+        CALL $F67F              ; do_clall
         
         
                 
