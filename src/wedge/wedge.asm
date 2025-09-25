@@ -13,7 +13,8 @@
         jmp wedge_irq
         jmp wedge_nmi
         jmp wedge_cbmlink_serial
-        jmp jump_0400
+        jmp wedge_cbmlink_c2n232
+        jmp WedgeHook
 
 wedge_start:
         sei
@@ -40,6 +41,7 @@ wedge_start:
         jsr setup_warmstart
         jsr setup_func_keys
         jsr setup_wedge_irq
+        jsr WedgeInstall
         pla
         sta IndReg
         cli
@@ -141,10 +143,43 @@ wedge_nmi:
 ; --------------------------------------------------------
 
 wedge_cbmlink_serial:
-
         lda #<cbmlink_serial_bin
         sta src_ptr
         lda #>cbmlink_serial_bin
+        sta src_ptr+1
+        lda #$00
+        sta mem_ptr
+        lda #$04
+        sta mem_ptr+1
+        ldx #0
+        ldy #0
+        lda #$0F
+        sta IndReg
+@loop1:
+        lda (src_ptr,x)
+        sta (mem_ptr),y
+        inc src_ptr
+        bne @notzero1
+        inc src_ptr+1
+@notzero1:
+        iny
+        bne @loop1
+        inc mem_ptr+1
+@loop2:
+        lda (src_ptr,x)
+        sta (mem_ptr),y
+        inc src_ptr
+        bne @notzero2
+        inc src_ptr+1
+@notzero2:
+        iny
+        bne @loop2
+        jmp jump_0400
+
+wedge_cbmlink_c2n232:
+        lda #<cbmlink_c2n232_bin
+        sta src_ptr
+        lda #>cbmlink_c2n232_bin
         sta src_ptr+1
         lda #$00
         sta mem_ptr
@@ -199,6 +234,21 @@ setup_func_keys:
         lda #$F0
         ldy #11
         jsr jump_do_funkey
+        ldy #0
+        lda #key_f12_end - key_f12
+        sta (mem_ptr),y
+        iny
+        lda #<key_f12
+        sta (mem_ptr),y
+        iny
+        lda #>key_f12
+        sta (mem_ptr),y
+        iny
+        lda $00
+        sta (mem_ptr),y
+        lda #$F0
+        ldy #12
+        jsr jump_do_funkey
         rts
                         
 ; --------------------------------------------------------
@@ -230,11 +280,15 @@ banner_128:
         .byt $93, "*** commodore basic 128, v4.0 ***", $0D, 0
 banner_wedge:
         .byt "simple bank 0 wedge v0.1 installed", $0D
-        .byt "f11 - cbmlink serial", $0D, 0
+        .byt "f11: cbmlink serial, f12: cbmlink c2n232", $0D, 0
 
 key_f11:
         .byt "sys4416", $0D
 key_f11_end:
+
+key_f12:
+        .byt "sys4424", $0D
+key_f12_end:
         
 ; --------------------------------------------------------
 ; Return from bank 15 call - set Z flag accordingly
@@ -461,8 +515,39 @@ jump_do_getin:
         CALL $0400+3*88
 jump_do_clall:
         CALL $0400+3*89
+jump_85E2:
+        CALL $0400+3*90
+jump_85EA:
+        CALL $0400+3*91
+jump_8542:
+        CALL $0400+3*92
+jump_854D:
+        CALL $0400+3*93
+jump_8555:
+        CALL $0400+3*94
+jump_85B8:
+        CALL $0400+3*95
+jump_85C0:
+        CALL $0400+3*96
+jump_86DB:
+        CALL $0400+3*97
+jump_86E3:
+        CALL $0400+3*98
+jump_85EB:
+        CALL $0400+3*99
+jump_85F3:
+        CALL $0400+3*100
+jump_B98B:
+        CALL $0400+3*101
+jump_BA29:
+        CALL $0400+3*102
+jump_B988:
+        CALL $0400+3*103
+jump_BA26:
+        CALL $0400+3*104
+jump_tmp:
+        CALL $0400+3*105
 
-        
                 
 cbmlink_serial_bin:
         .incbin "cbmlink/serial.bin"
@@ -471,8 +556,8 @@ cbmlink_serial_end:
 cbmlink_c2n232_bin:
         .incbin "cbmlink/c2n232.bin"
 cbmlink_c2n232_end:
-                        
 
+.include "disk.asm"
                 
 .ifdef PRG
 .res 16, $AA

@@ -447,7 +447,38 @@ jump_wedge_88:
         CALL $F43D              ; do_getin
 jump_wedge_89:
         CALL $F67F              ; do_clall
-        
+jump_wedge_90:
+        CALL $85E2
+jump_wedge_91:
+        CALL $85EA
+jump_wedge_92:
+        CALL $8542
+jump_wedge_93:
+        CALL $854D
+jump_wedge_94:
+        CALL $8555
+jump_wedge_95:
+        CALL $85B8
+jump_wedge_96:
+        CALL $85C0
+jump_wedge_97:
+        CALL $86DB
+jump_wedge_98:
+        CALL $86E3
+jump_wedge_99:
+        CALL $85EB
+jump_wedge_100:
+        CALL $85F3
+jump_wedge_101:
+        CALL $B98B
+jump_wedge_102:
+        CALL $BA29
+jump_wedge_103:
+        CALL $B988
+jump_wedge_104:
+        CALL $BA26
+jump_wedge_105:
+        CALL $8000
         
                 
 .res ($2000-*),$FF

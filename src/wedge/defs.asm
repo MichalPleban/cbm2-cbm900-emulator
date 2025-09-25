@@ -10,3 +10,8 @@ mem_ptr:    .res 2
 src_ptr:    .res 2
 basic_type: .res 1
 screen_ptr: .res 2
+
+WedgeDevice: .res 1
+WedgeTmp:   .res 1
+WedgeBuffer: .res 3
+

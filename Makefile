@@ -11,7 +11,7 @@ SRC_EMUL = src/emul/scc.asm src/emul/cio.asm src/emul/cio2.asm src/emul/disk.asm
 SRC_SD = src/sd/init.asm src/sd/access.asm src/sd/fat32.asm
 SRC = $(SRC_MAIN) $(SRC_CBM) $(SRC_EMUL) $(SRC_SD)
 SRC_BOOT = src/boot/init.asm src/boot/boot.asm src/boot/defs.asm src/boot/jump.asm $(SRC_SD)
-SRC_WEDGE = src/wedge/wedge.asm
+SRC_WEDGE = src/wedge/wedge.asm src/wedge/disk.asm
 
 all: $(ROM) $(STUB) $(STUB2) $(SD) $(BOOT) $(WEDGE)
 disk: bin/disk.d80
