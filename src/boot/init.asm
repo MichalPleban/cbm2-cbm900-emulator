@@ -16,7 +16,6 @@
 ; --------------------------------------------------------
 
         jmp do_init
-vec_warm:
         jmp do_warm
         .byt $43, $C2, $CD, $31
 
@@ -36,6 +35,7 @@ vec_warm:
         nop
         jmp do_init
 
+vec_warm:
         ; Warm reset in bank 0
         sei
         nop
@@ -48,7 +48,7 @@ vec_warm:
         nop
         jmp do_warm
 
-        ; Wedge start in bank 1
+        ; Wedge cold start in bank 1
 start_wedge:
         sei
         lda CHIPSET_BASE + REG_IO_PINS
@@ -64,7 +64,18 @@ start_wedge:
         lda CHIPSET_BASE + REG_IO_PINS
         ora #IO_BANK
         sta CHIPSET_BASE + REG_IO_PINS
-        ; Next instruction is executed in bank 1 (wedge warm reset)
+        ; Next instruction is executed in bank 1 (wedge start)
+        nop
+        nop
+        nop
+
+basic_prompt:
+        ; BASIC prompt in bank 1
+        sei
+        lda CHIPSET_BASE + REG_IO_PINS
+        ora #IO_BANK
+        sta CHIPSET_BASE + REG_IO_PINS
+        ; Next instruction is executed in bank 1 (BASIC prompt)
         nop
         nop
         nop
@@ -116,8 +127,7 @@ do_warm:
         lda #$e9
         sta $0300
 @dont_reset_irq:
-        cli
-        jmp $8003        
+        jmp WarmBASIC
                 
 do_init:
         sei
@@ -223,12 +233,12 @@ menu_start:
         jsr BSOUT
         
 @no_cart:
-
         lda #$0D
         jsr BSOUT
         jsr disable_cursor
         cli
 menu_loop:
+        ; Check for F1-F4 key press
         ldx #$01
         jsr CHKIN
         jsr GETIN
@@ -295,12 +305,11 @@ init_wedge:
         sta filename
         lda #>wedge_filename
         sta filename+1
-        lda #$00
-        sta load_addr+2
-        lda #$FE
-        sta load_addr
-        lda #$03
-        sta load_addr+1
+        ldx #$00
+        stx load_addr+2
+        stx load_addr+1
+        inx
+        stx load_addr
         jsr boot_file
         bcs display_error
         jmp start_wedge
@@ -496,7 +505,7 @@ Delay1:
         rts        
 
 ; --------------------------------------------------------
-; Check carteidge presence
+; Check cartridge presence
 ; --------------------------------------------------------
 
 Check6000:
@@ -631,7 +640,7 @@ Init256l3:
         lda #>vec_warm
         sta wstvec+1
         cli
-        jmp $85b8
+        jmp basic_prompt
 
 ; --------------------------------------------------------
 ; Initialize BASIC 128
@@ -685,9 +694,41 @@ Init128l3:
         lda #>vec_warm
         sta wstvec+1
         cli
-        jmp $85c0
+        jmp basic_prompt
 
                 
+WarmBASIC:
+        ; Break code in the ROM monitor page 1
+    	lda	#$15
+	    ldx	#$03
+	    stx	$0302
+	    sta	$0303
+	    
+	    ; Continue with BASIC code
+        bit $8001
+        bpl Warm128
+
+; --------------------------------------------------------
+; Warm start BASIC 256
+; --------------------------------------------------------
+
+        jsr $ff7b
+        jsr $bb83
+        jsr $ff7e
+        jsr $b9ee
+        jmp basic_prompt
+
+; --------------------------------------------------------
+; Warm start BASIC 128
+; --------------------------------------------------------
+
+Warm128:
+        jsr $ff7b
+        jsr $bc16
+        jsr $ff7e
+        jsr $ba8c
+        jmp basic_prompt
+
 .res ($2000-*),$FF
 
 .define ROM

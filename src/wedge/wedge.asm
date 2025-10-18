@@ -4,7 +4,8 @@
 .code
 
 .ifdef PRG
-.byt $00, $04
+.include "../cbm2/stub.asm"
+.res ($0400-*), $FF
 .endif
 
 .org $0400
@@ -48,7 +49,6 @@ wedge_start:
         jmp jump_bas_init_3
 
 wedge_warm:
-        cli
         jmp jump_8003
         
 ; --------------------------------------------------------
@@ -558,8 +558,8 @@ cbmlink_c2n232_bin:
 cbmlink_c2n232_end:
 
 .include "disk.asm"
-                
-.ifdef PRG
-.res 16, $AA
-.endif
 
+.ifdef PRG
+.res 128, $AA
+.endif
+        

@@ -1,4 +1,5 @@
 
+
 .ifdef PRG
 .include "../cbm2/defs.asm"
 .include "../chipset.asm"
@@ -43,7 +44,7 @@ warm_reset:
         nop
         nop
 
-        ; Wedge start in EPROM page 1 - points to wedge function #0
+        ; Wedge cold start in EPROM page 1 - points to wedge function #0
         sei
         nop
         nop
@@ -55,7 +56,7 @@ warm_reset:
         nop
         jmp jump_wedge_0
 
-        ; Warm reset in EPROM page 1 - points to wedge function #1
+        ; Wedge warm start in EPROM page 1 - points to wedge function #0
         sei
         nop
         nop
@@ -66,6 +67,18 @@ warm_reset:
         nop
         nop
         jmp jump_wedge_1
+
+        ; BASIC prompt in EPROM page 1 - points to BASIC prompt function
+        sei
+        nop
+        nop
+        nop
+        nop
+        nop
+        nop
+        nop
+        nop
+        jmp InitBASICEnd
 
 ; --------------------------------------------------------
 ; Initialize BASIC (first part)
@@ -173,6 +186,7 @@ InitBASICMiddle128:
 ; --------------------------------------------------------
 
 InitBASICEnd:
+        cli
         bit $8001
         bpl InitBASICEnd128
         
@@ -199,12 +213,6 @@ CallNMI:
         php
         jmp ($FFFB)
 
-do_CallIRQ:
-        jmp ($FFFE)
-
-do_rti:
-        rti
-
         
 
 ; --------------------------------------------------------
@@ -230,6 +238,14 @@ CallReturn:
         rts
 @one:
         .byt $01
+        
+
+do_CallIRQ:
+        jmp ($FFFE)
+
+do_rti:
+        rti
+
         
 ; --------------------------------------------------------
 ; IRQ handler stub
@@ -478,8 +494,11 @@ jump_wedge_103:
 jump_wedge_104:
         CALL $BA26
 jump_wedge_105:
-        CALL $8000
+        CALL $8003
         
+.res ($1500-*),$FF
+
+.incbin "bin/moni.bin"
                 
 .res ($2000-*),$FF
 

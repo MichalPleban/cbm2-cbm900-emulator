@@ -1,7 +1,7 @@
 
 ; --------------------------------------------------------
 ; Install wedge routine hook into BASIC
-; The trampoline address is #1150 (wedge function #6_
+; The trampoline address is #1150 (wedge function #6)
 ;  and the vector is $0282 (warm start link)
 ; --------------------------------------------------------
 WedgeInstall:
@@ -225,7 +225,7 @@ WedgeSet:
 ; Send command to the drive
 ; --------------------------------------------------------
 WedgeCommand:
-		sei
+        sei
 		lda WedgeDevice
 		jsr jump_listen
 		lda #$FF

@@ -3,7 +3,7 @@ ROM = bin/emulate.bin bin/emulate.prg bin/boot.bin
 STUB = bin/stub.bin bin/stub.prg
 STUB2 = bin/stub2.bin bin/stub2.prg
 SD = bin/sd.bin bin/sd.prg
-BOOT = bin/boot.bin bin/boot.prg bin/jump.prg
+BOOT = bin/boot.bin bin/boot.prg bin/moni.bin bin/jump.prg
 WEDGE = bin/wedge.bin bin/wedge.prg
 SRC_MAIN = src/main.asm src/defs.asm src/trace.asm src/emul.asm src/menu/menu.asm src/menu/config.asm src/tools/config.asm
 SRC_CBM = src/cbm2.asm src/cbm2/init.asm src/cbm2/screen.asm src/cbm2/irq.asm src/cbm2/kbd.asm src/cbm2/serial.asm src/cbm2/stub.asm
@@ -12,6 +12,7 @@ SRC_SD = src/sd/init.asm src/sd/access.asm src/sd/fat32.asm
 SRC = $(SRC_MAIN) $(SRC_CBM) $(SRC_EMUL) $(SRC_SD)
 SRC_BOOT = src/boot/init.asm src/boot/boot.asm src/boot/defs.asm src/boot/jump.asm $(SRC_SD)
 SRC_WEDGE = src/wedge/wedge.asm src/wedge/disk.asm
+SRC_MONI = src/moni/moni.asm src/moni/moni.inc src/moni/diskio.inc src/moni/kernal.inc src/moni/iodef610.inc src/moni/p3def610.inc src/moni/zpdef610.inc
 
 all: $(ROM) $(STUB) $(STUB2) $(SD) $(BOOT) $(WEDGE)
 disk: bin/disk.d80
@@ -46,8 +47,13 @@ bin/boot.prg: $(SRC_BOOT)
 	ld65 src/boot/init.o -C src/boot/boot.cfg -o bin/boot.prg
 	rm src/boot/init.o
 
-bin/jump.prg: $(SRC_BOOT)
-	ca65 -t c64 src/boot/jump.asm -DPRG
+bin/moni.bin: $(SRC_MONI)
+	ca65 src/moni/moni.asm
+	ld65 src/moni/moni.o -C src/moni/moni.cfg -o bin/moni.bin
+	rm src/moni/moni.o
+
+bin/jump.prg: $(SRC_BOOT) bin/moni.bin
+	ca65 -t c64 src/boot/jump.asm -DPRG -DINCLUDES
 	ld65 src/boot/jump.o -C src/boot/boot.cfg -o bin/jump.prg
 	rm src/boot/jump.o
 
@@ -103,7 +109,7 @@ upload_jump: bin/jump.prg
 	tools/cbmlink -c serial com1 -b 15 -lr,4096 bin/jump.prg
 
 upload_wedge: bin/wedge.prg
-	tools/cbmlink -c serial com1 -b 0 -lr,1024 bin/wedge.prg
+	tools/cbmlink -c serial com1 -b 0 -lr,3 bin/wedge.prg
 
 bin/config.cfg: src/tools/config.asm
 	ca65 src/tools/config.asm -DCONFIG_FILE
