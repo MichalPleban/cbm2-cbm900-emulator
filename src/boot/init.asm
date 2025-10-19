@@ -23,7 +23,8 @@
 ; Routines to run code in the second bank
 ; --------------------------------------------------------
 
-        ; Cold reset in bank 0
+        ; Cold reset in EPROM page 0
+vec_cold:
         sei
         nop
         nop
@@ -35,8 +36,8 @@
         nop
         jmp do_init
 
+        ; Warm reset in EPROM page 0
 vec_warm:
-        ; Warm reset in bank 0
         sei
         nop
         nop
@@ -48,34 +49,35 @@ vec_warm:
         nop
         jmp do_warm
 
-        ; Wedge cold start in bank 1
-start_wedge:
-        sei
-        lda CHIPSET_BASE + REG_IO_PINS
-        ora #IO_BANK
-        sta CHIPSET_BASE + REG_IO_PINS
-        ; Next instruction is executed in bank 1 (wedge start)
-        nop
-        nop
-        nop
-
-        ; Wedge warm start in bank 1
-        sei
-        lda CHIPSET_BASE + REG_IO_PINS
-        ora #IO_BANK
-        sta CHIPSET_BASE + REG_IO_PINS
-        ; Next instruction is executed in bank 1 (wedge start)
-        nop
-        nop
-        nop
-
+        ; BASIC prompt in EPROM page 1
 basic_prompt:
-        ; BASIC prompt in bank 1
         sei
         lda CHIPSET_BASE + REG_IO_PINS
         ora #IO_BANK
         sta CHIPSET_BASE + REG_IO_PINS
-        ; Next instruction is executed in bank 1 (BASIC prompt)
+        ; Next instruction is executed in bank 1
+        nop
+        nop
+        nop
+
+        ; Start monitor in EPROM 1
+start_monitor:
+        sei
+        lda CHIPSET_BASE + REG_IO_PINS
+        ora #IO_BANK
+        sta CHIPSET_BASE + REG_IO_PINS
+        ; Next instruction is executed in bank 1
+        nop
+        nop
+        nop
+
+        ; Start cbmlink in EPROM page 1
+start_cbmlink:
+        sei
+        lda CHIPSET_BASE + REG_IO_PINS
+        ora #IO_BANK
+        sta CHIPSET_BASE + REG_IO_PINS
+        ; Next instruction is executed in bank 1
         nop
         nop
         nop
@@ -117,16 +119,6 @@ do_warm:
         bne @check
         and #$10
         beq do_init
-        ; Reset IRQ vector if it points to ROM code in bank 1
-        lda $0301
-        and #$F0
-        cmp #$10
-        bne @dont_reset_irq
-        lda #$fb
-        sta $0301
-        lda #$e9
-        sta $0300
-@dont_reset_irq:
         jmp WarmBASIC
                 
 do_init:
@@ -238,7 +230,7 @@ menu_start:
         jsr disable_cursor
         cli
 menu_loop:
-        ; Check for F1-F4 key press
+        ; Check for F1-F3 key press
         ldx #$01
         jsr CHKIN
         jsr GETIN
@@ -247,15 +239,15 @@ menu_loop:
         beq init_emulation
         cmp #$89
         bne not_F2
+        lda #$30
+        jsr BSOUT
         lda #$A5
         sta WstFlag
         jmp InitBASIC
 not_F2:        
-        cmp #$86
-        beq init_wedge
         bit cart_addr+1
         bmi menu_loop
-        cmp #$8A
+        cmp #$86
         bne menu_loop
         jmp (cart_addr)
 
@@ -293,27 +285,6 @@ init_emulation:
         sta $03FF
         jmp $03FC
         
-init_wedge:
-        lda #<msg_load2
-        ldy #>msg_load2
-        jsr output_banner
-        sei
-        
-@load:
-        ; Load the file from SD card
-        lda #<wedge_filename
-        sta filename
-        lda #>wedge_filename
-        sta filename+1
-        ldx #$00
-        stx load_addr+2
-        stx load_addr+1
-        inx
-        stx load_addr
-        jsr boot_file
-        bcs display_error
-        jmp start_wedge
-
 display_error:        
         ; Display error message
         jsr disk_error
@@ -403,13 +374,7 @@ set_keys:
         inc $F1
         lda #$F0
         ldy #3
-        jsr jmp_funkey
-        inc $F1
-        lda #$F0
-        ldy #4
-        jsr jmp_funkey
-        rts
-
+        jmp jmp_funkey
         
 ; --------------------------------------------------------
 ; Fast RAM initialization & test
@@ -554,29 +519,32 @@ msg_menu:
         .byt " kB system RAM, 1024 kB expansion RAM", $0D, $0D
         .byt " [F1] - boot Commodore 900 emulation", $0D
         .byt " [F2] - boot into BASIC", $0D
-        .byt " [F3] - boot wedge program", $0D
         .byt 0
 
 msg_cart:
-        .byt " [F4] - boot cartridge at $", 0
+        .byt " [F3] - boot cartridge at $", 0
         
 msg_load:
         .byt "Loading file EMULCBM2.PRG... ", 0
-msg_load2:
-        .byt "Loading file WEDGE.PRG... ", 0
         
 msg_error:
         .byt $0D, "Press Return to continue", 0
         
 func_keys:
-        .byt $85, $89, $86, $8A, $87, $8B, $88, $8C
+        .byt $85, $89, $86
+        
+key_f11:
+        .byt "sys4154", $0D
+key_f20:
+        .byt "sys4142", $0D
+        
+msg_basic:
+        .byt "f11: cbmlink serial, f20: monitor, c=+reset: boot menu", $0D, 0
         
 .include "boot.asm"
 
 emul_filename:
         .byt $45, $4D, $55, $4C, $43, $42, $4D, $32, $50, $52, $47 ; "EMULCBM2PRG"
-wedge_filename:
-        .byt $57, $45, $44, $47, $45, $20, $20, $20, $50, $52, $47 ; "WEDGE   PRG"
 
 InitBASIC:
         bit $8001
@@ -632,14 +600,17 @@ Init256l3:
         ldx #$26
         jsr $a32f
         jsr $8a12
+        lda #<msg_basic
+        ldx #>msg_basic
+        jsr BASICBanner
         ldx #$39
         ldy #$bb
         jsr $ff6f
+        jsr basic_keys
         lda #<vec_warm
         sta wstvec
         lda #>vec_warm
         sta wstvec+1
-        cli
         jmp basic_prompt
 
 ; --------------------------------------------------------
@@ -686,17 +657,56 @@ Init128l3:
         ldx #$26
         jsr $a3c3
         jsr $8a2b
+        lda #<msg_basic
+        ldx #>msg_basic
+        jsr BASICBanner
         ldx #$cc
         ldy #$bb
         jsr $ff6f
+        jsr basic_keys
         lda #<vec_warm
         sta wstvec
         lda #>vec_warm
         sta wstvec+1
-        cli
         jmp basic_prompt
-
                 
+BASICBanner:
+        sta $025b
+        stx $025c
+        bit $8001
+        bpl BasicBanner1
+        jmp $a33b        
+BasicBanner1:
+        jmp $a3cf
+
+; --------------------------------------------------------
+; Set function keys for EPROM page 1
+; --------------------------------------------------------
+
+basic_keys:
+        lda #8
+        sta $F0
+        lda #$0F
+        sta $F3
+        lda #<key_f20
+        sta $F1
+        lda #>key_f20
+        sta $F2
+        lda #$F0
+        ldy #20
+        jsr jmp_funkey
+        lda #<key_f11
+        sta $F1
+        lda #>key_f11
+        sta $F2
+        lda #$F0
+        ldy #11
+        jmp jmp_funkey
+
+; --------------------------------------------------------
+; Warm start procedure
+; --------------------------------------------------------
+
 WarmBASIC:
         ; Break code in the ROM monitor page 1
     	lda	#$15
