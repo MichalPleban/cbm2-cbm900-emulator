@@ -86,6 +86,7 @@ warm_reset:
 
 InitBASICEnd:
         cli
+        jsr $1300
         bit $8001
         bpl InitBASICEnd128
         
@@ -113,8 +114,10 @@ CbmLinkSerial:
         .incbin "cbmlink.bin"
 
         
-.res ($1500-*),$FF
+.res ($1300-*),$FF
+.incbin "bin/wedge.bin"
 
+.res ($1500-*),$FF
 .incbin "bin/moni.bin"
                 
 .res ($2000-*),$FF

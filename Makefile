@@ -1,8 +1,9 @@
 
-ROM = bin/emulcbm2.prg bin/emulcbm2_debug.prg bin/boot.bin
+EMUL = bin/emulcbm2.prg bin/emulcbm2_debug.prg bin/boot.bin
 STUB = bin/stub.bin bin/stub.prg
 STUB2 = bin/stub2.bin bin/stub2.prg
 SD = bin/sd.bin bin/sd.prg
+EXTERNAL = bin/moni.bin bin/wedge.bin
 BOOT = bin/boot.bin bin/boot.prg bin/moni.bin bin/jump.prg
 SRC_MAIN = src/main.asm src/defs.asm src/trace.asm src/emul.asm src/menu/menu.asm src/menu/config.asm src/tools/config.asm
 SRC_CBM = src/cbm2.asm src/cbm2/init.asm src/cbm2/screen.asm src/cbm2/irq.asm src/cbm2/kbd.asm src/cbm2/serial.asm src/cbm2/stub.asm
@@ -10,9 +11,10 @@ SRC_EMUL = src/emul/scc.asm src/emul/cio.asm src/emul/cio2.asm src/emul/disk.asm
 SRC_SD = src/sd/init.asm src/sd/access.asm src/sd/fat32.asm
 SRC = $(SRC_MAIN) $(SRC_CBM) $(SRC_EMUL) $(SRC_SD)
 SRC_BOOT = src/boot/init.asm src/boot/boot.asm src/boot/defs.asm src/boot/jump.asm $(SRC_SD)
-SRC_MONI = src/moni/moni.asm src/moni/moni.inc src/moni/diskio.inc src/moni/kernal.inc src/moni/iodef610.inc src/moni/p3def610.inc src/moni/zpdef610.inc
+SRC_MONI = src/external/moni.asm src/external/moni.inc src/external/diskio.inc src/external/kernal.inc src/external/iodef610.inc src/external/p3def610.inc src/external/zpdef610.inc
+SRC_WEDGE = src/external/wedge.asm src/external/wedge.inc src/external/kernal.inc src/external/iodef610.inc src/external/p3def610.inc src/external/zpdef610.inc
 
-all: $(ROM) $(STUB) $(STUB2) $(SD) $(BOOT) $(WEDGE)
+all: $(EMUL) $(BOOT)
 disk: bin/disk.d80
 
 bin/emulcbm2.prg: $(SRC)
@@ -25,22 +27,27 @@ bin/emulcbm2_debug.prg: $(SRC)
 	ld65 src/main.o -C src/main.cfg -o bin/emulcbm2_debug.prg
 	rm src/main.o
 
-bin/boot.bin: $(SRC_BOOT)
+bin/boot.bin: $(SRC_BOOT) $(EXTERNAL)
 	ca65 -t c64 src/boot/init.asm
 	ld65 src/boot/init.o -C src/boot/boot.cfg -o bin/boot.bin
 	rm src/boot/init.o
 
-bin/boot.prg: $(SRC_BOOT)
+bin/boot.prg: $(SRC_BOOT) $(EXTERNAL)
 	ca65 -t c64 src/boot/init.asm -DPRG
 	ld65 src/boot/init.o -C src/boot/boot.cfg -o bin/boot.prg
 	rm src/boot/init.o
 
 bin/moni.bin: $(SRC_MONI)
-	ca65 src/moni/moni.asm
-	ld65 src/moni/moni.o -C src/moni/moni.cfg -o bin/moni.bin
-	rm src/moni/moni.o
+	ca65 src/external/moni.asm
+	ld65 src/external/moni.o -C src/external/external.cfg -o bin/moni.bin
+	rm src/external/moni.o
 
-bin/jump.prg: $(SRC_BOOT) bin/moni.bin
+bin/wedge.bin: $(SRC_WEDGE)
+	ca65 src/external/wedge.asm
+	ld65 src/external/wedge.o -C src/external/external.cfg -o bin/wedge.bin
+	rm src/external/wedge.o
+
+bin/jump.prg: $(SRC_BOOT) $(EXTERNAL)
 	ca65 -t c64 src/boot/jump.asm -DPRG -DINCLUDES
 	ld65 src/boot/jump.o -C src/boot/boot.cfg -o bin/jump.prg
 	rm src/boot/jump.o
