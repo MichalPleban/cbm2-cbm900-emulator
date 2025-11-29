@@ -600,6 +600,8 @@ Init256l3:
         ldx #$26
         jsr $a32f
         jsr $8a12
+        lda #$0a
+        jsr BSOUT
         lda #<msg_basic
         ldx #>msg_basic
         jsr BASICBanner

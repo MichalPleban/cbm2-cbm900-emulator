@@ -79,7 +79,8 @@ no_expansion:
 
         
 banner:
-        .byt "Commodore C900 emulation layer version 0.5.1, (C) Michal Pleban", $0D, $0A, $0D, $0A, 0
+        .byt "Commodore C900 emulation layer version 0.5.2, (C) Michal Pleban", $0D, $0A
+        .byt "Press Run/Stop for menu.", $0D, $0A, $0D, $0A, 0
 
 .include "trace.asm"
 
