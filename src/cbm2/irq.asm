@@ -74,7 +74,7 @@ irq_handler:
         ; Scan keyboard
         jsr kbd_scan
         
-        ; Issue timer IRQ to the Z800
+        ; Issue timer IRQ to the Z8000
 .ifdef DEBUG
         dec irq_delay
         bne @no_timer
@@ -91,7 +91,7 @@ irq_handler:
         bcc @acia
         jmp @end
 @acia:
-
+        jsr serial_irq
 @end:
         ; Clear TPI pending interrupt 
         ldy #7

@@ -25,7 +25,11 @@ scc_set_irq:
         bpl @no_irq
         ldx kbd_head
         cpx kbd_tail
+        bne @set_irq
+        ldx serial_head
+        cpx serial_tail
         beq @no_irq
+@set_irq:
         lda #$80
         .byt $2c
 @no_irq:
@@ -33,9 +37,9 @@ scc_set_irq:
         sta scc_irq_pending
         jmp irq_issue        
         
-; Register 00 - line status
+; Register 00 - line A status
 ; We return 04 to indicate that it's OK to send the next character
-; and if there is a character in the keyboard buffer, we or with 01.
+; and if there is a character in the keyboard buffer, we or it with 01.
 scc_in_00:
         lda #$04
         ldx kbd_head
@@ -46,7 +50,7 @@ scc_in_00:
         sta z8000_data
         rts
         
-; Register 08 - receive buffer
+; Register 08 - receive buffer A
 ; Input the character from the keyboard.
 scc_in_08:
         jsr kbd_fetch
@@ -54,7 +58,7 @@ scc_in_08:
         jsr scc_set_irq
         rts
 
-; Register 08 - transmit buffer
+; Register 08 - transmit buffer A
 ; Output the transmitted character to screen.
 scc_out_08:
         lda z8000_data
@@ -76,6 +80,86 @@ scc_out_09:
         sta scc_irq_enable
         rts
 
+; Register 10 - line B status
+; Read ACIA TX buffer empty bit and input buffer status
+scc_in_10:
+;        jsr serial_status
+;        lsr a
+;        lsr a
+        lda #$04
+        ldx serial_tail
+        cpx serial_head
+        beq @end
+        ora #$01
+@end:
+        sta z8000_data
+        rts  
+
+; Register 18 - transmit buffer B
+; Read the character from incoming buffer
+scc_in_18:
+        ldx serial_head
+        cpx serial_tail
+        beq @end
+        lda SERIAL_BUFFER,x
+        inc serial_head
+@end:
+        sta z8000_data
+
+;        ; <debug>
+;        lda #'I'
+;        jsr screen_output
+;        lda #':'
+;        jsr screen_output
+;        lda z8000_data
+;        lsr a
+;        lsr a
+;        lsr a
+;        lsr a
+;        tax
+;        lda hex_chars,x
+;        jsr screen_output
+;        lda z8000_data
+;        and #$0F
+;        tax
+;        lda hex_chars,x
+;        jsr screen_output
+;        lda #' '
+;        jsr screen_output
+;        ; </debug>
+        
+        jsr scc_set_irq
+        rts
+        
+; Register 18 - transmit buffer B
+; Output the character to RS-232C.
+scc_out_18:
+
+;        ; <debug>
+;        lda #'O'
+;        jsr screen_output
+;        lda #':'
+;        jsr screen_output
+;        lda z8000_data
+;        lsr a
+;        lsr a
+;        lsr a
+;        lsr a
+;        tax
+;        lda hex_chars,x
+;        jsr screen_output
+;        lda z8000_data
+;        and #$0F
+;        tax
+;        lda hex_chars,x
+;        jsr screen_output
+;        lda #' '
+;        jsr screen_output
+;        ; </debug>
+        
+        lda z8000_data
+        jmp serial_output
+                
 scc_save:
         lda z8000_addr
         lsr a
@@ -111,7 +195,7 @@ scc_table:
         .word scc_save, scc_load        ; 0D
         .word empty, undefined          ; 0E
         .word scc_save, scc_load        ; 0F
-        .word undefined, undefined      ; 10
+        .word undefined, scc_in_10      ; 10
         .word undefined, undefined      ; 11
         .word scc_save, scc_load        ; 12
         .word undefined, undefined      ; 13
@@ -119,7 +203,7 @@ scc_table:
         .word undefined, undefined      ; 15
         .word undefined, undefined      ; 16
         .word undefined, undefined      ; 17
-        .word undefined, undefined      ; 18
+        .word scc_out_18, scc_in_18     ; 18
         .word empty, undefined          ; 19
         .word undefined, undefined      ; 1A
         .word undefined, undefined      ; 1B

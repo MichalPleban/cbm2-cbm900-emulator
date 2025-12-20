@@ -14,9 +14,21 @@ irq_handle:
 @not_timer:
         bit scc_irq_pending
         bpl @not_serial_in
-        lda scc_irq_vector
+        ; Determine the source of the IRQ
+        lda #$00
+        ldx kbd_head
+        cpx kbd_tail
+        beq @not_kbd
+        lda #$04
+        bne @do_serial_irq
+@not_kbd:
+        ldx serial_head
+        cpx serial_tail
+        beq @do_serial_irq
+        lda #$0C
+@do_serial_irq:
         clc
-        adc #4
+        adc scc_irq_vector
         jmp @finish
 @not_serial_in:
 ;        jsr disk_clear

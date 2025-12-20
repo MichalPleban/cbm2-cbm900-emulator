@@ -1,4 +1,5 @@
 
+EF00 - EFFF     RS-232C buffer
 F000 - F7FF     Saved screen contents when displaying the menu
 F800 - F8FF     List of files on the disk
 F900 - F9FF     Floppy disk file mapping

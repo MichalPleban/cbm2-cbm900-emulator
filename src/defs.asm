@@ -106,6 +106,10 @@ menu_file_ptr:  .res 2
 menu_file2_ptr: .res 2
 menu_name_pos:  .res 1
 
+; RS-232C variables
+serial_head:	.res 1
+serial_tail:	.res 1
+
 ; Temporary variables
 scratchpad:     .res 8
 

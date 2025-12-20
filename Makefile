@@ -82,8 +82,8 @@ bin/sd.prg: src/tools/sd.asm $(SRC_SD) src/sd/defs.asm
 	ld65 src/tools/sd.o -C src/main.cfg -o bin/sd.prg
 	rm src/tools/sd.o
 
-upload: bin/emulcbm2_debug.prg
-	tools/cbmlink -c serial com1 -b 1 -lo,3 bin/emulcbm2_debug.prg
+upload: bin/emulcbm2.prg
+	tools/cbmlink -c serial com1 -b 1 -lo,3 bin/emulcbm2.prg
 
 upload_stub: bin/stub.prg
 	tools/cbmlink -c serial com1 -b 15 -lo,1020 bin/stub.prg
