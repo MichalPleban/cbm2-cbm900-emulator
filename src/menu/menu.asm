@@ -489,7 +489,7 @@ menu_option_4:
 menu_option_5:
         .byt "F6:  Restore configuration", 0
 menu_option_6:
-        .byt "F8:  Reset computer", 0
+        .byt "F8:  Reset Z8000", 0
 
 menu_file_buf:
         .res 12, $00

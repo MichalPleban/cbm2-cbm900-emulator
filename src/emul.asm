@@ -12,7 +12,7 @@ emul_init:
         
 nmi_handler:
 
-; Save registers
+        ; Save registers
         sta nmi_save_a
         stx nmi_save_x
         sty nmi_save_y
@@ -21,7 +21,16 @@ nmi_handler:
         lda #$0F
         sta IND_REG
 
-; Copy Z8000 status from the chipset register
+        ; Check if interrupts were enabled when NMI handler was called.
+        pla
+        pha
+        and #$04
+        bne @no_irq
+        ; If yes, allow IRQ handler so that it is not starved.
+        cli
+@no_irq:
+
+        ; Copy Z8000 status from the chipset register
         ldy #REG_CODE_HI
 @copy:
         lda (CHIPSET), y
@@ -36,7 +45,7 @@ nmi_handler:
 
 @continue:
         
-; Show debug banner if necessary
+        ; Show debug banner if necessary
 .ifdef DEBUG
         jsr debug_start
         lda #$00
@@ -100,16 +109,6 @@ nmi_end:
 @notread:        
         
 nmi_finish:
-        ; Check if interrupts were enabled when NMI handler was called.
-        pla
-        pha
-        and #$04
-        bne @no_irq
-        ; If yes, allow IRQ handler so that it is not starved.
-        cli
-        nop
-        sei
-@no_irq:
         ldy #REG_STATUS
         lda nmi_save_ind
         sta IND_REG

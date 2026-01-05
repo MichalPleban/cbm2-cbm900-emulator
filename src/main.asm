@@ -54,9 +54,9 @@ no_expansion:
         jsr serial_init
         jsr emul_init
         jsr irq_init
-        jsr load_files
-        jsr irq_restart
         cli
+        jsr load_files
+;        jsr irq_restart
         
         ; Pull /RESET high
         ldy #6
@@ -67,6 +67,7 @@ no_expansion:
         sta z8000_started
         
         ; Main loop
+        cli
 @loop:
         jsr disk_handle
         lda kbd_stop
@@ -75,8 +76,6 @@ no_expansion:
         lda #$00
         sta kbd_stop
         jmp @loop
-
-
         
 banner:
         .byt "Commodore C900 emulation layer version 0.5.2, (C) Michal Pleban", $0D, $0A
@@ -401,7 +400,6 @@ load_files:
         jsr kbd_fetch
         cmp #$0D
         bne @disk_loop
-        sei
         lda #$0D
         jsr screen_output
         lda #$0A
@@ -414,7 +412,6 @@ load_files:
         jsr menu_show
         lda #0
         sta kbd_stop
-        sei
         lda #$0D
         jsr screen_output
         lda #$0A

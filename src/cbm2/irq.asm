@@ -3,10 +3,13 @@
 COUNTER = 20000 
 
 irq_init:
+        ; Set up IRQ handler vector at the top of RAM
         lda #<irq_handler
         sta $FFFE
         lda #>irq_handler
         sta $FFFF
+        
+        ; Set CIA timer A to 100 Hz
         ldy #4
         lda #<COUNTER
         sta (CIA),y
@@ -24,10 +27,12 @@ irq_init:
         lda #25
         sta irq_delay
 .endif
+
         ; Enable only IRQ from CIA and ACIA
         ldy #5
         lda #$14
         sta (TPI1),y
+        
         ; Enable IRQ priority
         iny
         lda (TPI1),y
@@ -47,11 +52,13 @@ irq_handler:
 
         ; Save registers
         cld
-        sta irq_save_a
-        stx irq_save_x
-        sty irq_save_y
+        pha
+        txa
+        pha
+        tya
+        pha
         lda IND_REG
-        sta irq_save_ind
+        pha
         lda #$0F
         sta IND_REG
 
@@ -71,8 +78,13 @@ irq_handler:
         lsr a
         bcc @not_cia
         
+        ; Re-enable IRQ to allow servicing higher priority ACIA interrupts
+        cli
+        
         ; Scan keyboard
         jsr kbd_scan
+        
+        jsr vga_check_mirror
         
         ; Issue timer IRQ to the Z8000
 .ifdef DEBUG
@@ -108,9 +120,11 @@ irq_handler:
 @not_cia_again:
 
         ; Restore registers
-        lda irq_save_ind
+        pla
         sta IND_REG
-        ldy irq_save_y
-        ldx irq_save_x
-        lda irq_save_a
+        pla
+        tay
+        pla
+        tax
+        pla
         rti

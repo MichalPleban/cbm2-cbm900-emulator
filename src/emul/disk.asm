@@ -32,8 +32,6 @@ disk_handle:
         bmi @handle
         rts
 @handle:
-        sei
-        
         ; Halt the Z8000
         ldy #REG_CONTROL
         lda (CHIPSET),y
@@ -159,7 +157,6 @@ disk_finish:
         jsr irq_issue
 
 @end:
-        cli
         rts
 
 ; ------------------------------------------------------------------------

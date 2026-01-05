@@ -1,5 +1,5 @@
 
-SERIAL_BUFFER = $EF00
+SERIAL_BUFFER = $DF00
 
 ; 6551 ACIA registers:
 ;  0 - data in/out
@@ -67,10 +67,10 @@ serial_irq:
         and #$08            ; Check if character received
         beq @end 
 
-;        ; <debug>
-;        lda #'.'
-;        jsr screen_output
-;        ; </debug>
+        ; <debug>
+        lda #'.'
+        jsr screen_output
+        ; </debug>
         
         ldx serial_tail
         inx

@@ -5,6 +5,7 @@ screen_charset = config_data + $29
 
 ; Initialize the screen routines
 screen_init:
+;        jsr vga_init
         jsr screen_clear
         lda #$00
         sta screen_invert
@@ -26,6 +27,7 @@ screen_init:
 ; Clear screen and reset screen pointer to 0,0.
 ; Destroyed: A, X, Y
 screen_clear:
+;        jmp vga_clear
         lda #$D8
         sta SCREEN+1
         ldy #$00
@@ -48,6 +50,7 @@ screen_clear:
 ; Input: A = character
 ; Destroyed: A, X, Y
 screen_output:
+;        jmp vga_output
         cmp #$0D
         bne @not_cr
         lda #0
@@ -457,14 +460,20 @@ menu_video:
         lda #<menu_video_2
         ldy #>menu_video_2
         jsr screen_string
+        ldx #24
+        ldy #10
+        jsr screen_position
+        lda #<menu_video_3
+        ldy #>menu_video_3
+        jsr screen_string
         ldx #22
-        ldy #11
+        ldy #12
         jsr screen_position
         lda #<menu_video_r
         ldy #>menu_video_r
         jsr screen_string
         ldx #22
-        ldy #12
+        ldy #13
         jsr screen_position
         lda #<menu_video_r2
         ldy #>menu_video_r2
@@ -473,8 +482,8 @@ menu_video:
         ldx #22
         ldy #6
         jsr screen_position
-        bit screen_charset
-        bvc @cbm_charset
+        lda screen_charset
+        beq @cbm_charset
         lda #$20
         bne @show_first
 @cbm_charset:
@@ -491,6 +500,17 @@ menu_video:
 @pc_charset:
         lda #'>'
 @show_second:
+        jsr screen_output
+        ldx #22
+        ldy #10
+        jsr screen_position
+        bit screen_charset
+        bmi @vga_card
+        lda #$20
+        bne @show_third
+@vga_card:
+        lda #'>'
+@show_third:
         jsr screen_output
 @loop:
         jsr kbd_fetch
@@ -512,6 +532,15 @@ menu_video:
         sta screen_charset
         bne @show_options
 @not_b:
+        cmp #'c'
+        beq @is_c
+        cmp #'C'
+        bne @not_c
+@is_c:
+        lda #$80
+        sta screen_charset
+        bne @show_options
+@not_c:
         cmp #27
         bne @loop
         rts
@@ -520,7 +549,9 @@ menu_video_1:
         .byt "A: Inbuilt video, standard charset", 0
 menu_video_2:
         .byt "B: Inbuilt video, PC charset", 0
+menu_video_3:
+        .byt "C: VGA adapter", 0
 menu_video_r:
         .byt "WARNING: Video mode change will only", 0
 menu_video_r2:
-        .byt "take effect after system reload.", 0
+        .byt "take effect after computer restart.", 0

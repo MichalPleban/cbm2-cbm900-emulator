@@ -31,11 +31,6 @@ z8000_status:   .res 1
 z8000_code:     .res 2
 
 ; IRQ handler variables
-irq_save_a:     .res 1
-irq_save_x:     .res 1
-irq_save_y:     .res 1
-irq_save_ind:   .res 1
-
 .ifdef DEBUG
 irq_delay:      .res 1
 .endif
@@ -109,6 +104,17 @@ menu_name_pos:  .res 1
 ; RS-232C variables
 serial_head:	.res 1
 serial_tail:	.res 1
+
+; VGA card variables
+vga_x:          .res 1
+vga_y:          .res 1
+vga_attr:       .res 1
+vga_delay:      .res 1
+vga_dirty:      .res 1
+vga_segment:    .res 1
+vga_ptr:        .res 2
+vga_buffer:     .res 2
+vga_mirror_buf: .res 2
 
 ; Temporary variables
 scratchpad:     .res 8

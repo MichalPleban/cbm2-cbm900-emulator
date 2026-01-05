@@ -6,7 +6,7 @@ SD = bin/sd.bin bin/sd.prg
 EXTERNAL = bin/moni.bin bin/wedge.bin
 BOOT = bin/boot.bin bin/boot.prg bin/moni.bin bin/jump.prg
 SRC_MAIN = src/main.asm src/defs.asm src/trace.asm src/emul.asm src/menu/menu.asm src/menu/config.asm src/tools/config.asm
-SRC_CBM = src/cbm2.asm src/cbm2/init.asm src/cbm2/screen.asm src/cbm2/irq.asm src/cbm2/kbd.asm src/cbm2/serial.asm src/cbm2/stub.asm
+SRC_CBM = src/cbm2.asm src/cbm2/init.asm src/cbm2/screen.asm src/cbm2/irq.asm src/cbm2/kbd.asm src/cbm2/serial.asm src/cbm2/vga.asm src/cbm2/stub.asm
 SRC_EMUL = src/emul/scc.asm src/emul/cio.asm src/emul/cio2.asm src/emul/disk.asm src/emul/irq.asm
 SRC_SD = src/sd/init.asm src/sd/access.asm src/sd/fat32.asm
 SRC = $(SRC_MAIN) $(SRC_CBM) $(SRC_EMUL) $(SRC_SD)
@@ -82,7 +82,7 @@ bin/sd.prg: src/tools/sd.asm $(SRC_SD) src/sd/defs.asm
 	ld65 src/tools/sd.o -C src/main.cfg -o bin/sd.prg
 	rm src/tools/sd.o
 
-upload: bin/emulcbm2.prg
+upload: bin/emulcbm2_debug.prg
 	tools/cbmlink -c serial com1 -b 1 -lo,3 bin/emulcbm2.prg
 
 upload_stub: bin/stub.prg

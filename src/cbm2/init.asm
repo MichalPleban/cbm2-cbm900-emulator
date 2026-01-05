@@ -25,9 +25,9 @@ machine_init:
         stx CHIPSET+1
         sta CHIPSET
         inx
-        inx
         stx SID+1
         sta SID
+        inx
         inx
         stx CIA+1
         sta CIA

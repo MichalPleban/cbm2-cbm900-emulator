@@ -106,27 +106,27 @@ scc_in_18:
 @end:
         sta z8000_data
 
-;        ; <debug>
-;        lda #'I'
-;        jsr screen_output
-;        lda #':'
-;        jsr screen_output
-;        lda z8000_data
-;        lsr a
-;        lsr a
-;        lsr a
-;        lsr a
-;        tax
-;        lda hex_chars,x
-;        jsr screen_output
-;        lda z8000_data
-;        and #$0F
-;        tax
-;        lda hex_chars,x
-;        jsr screen_output
-;        lda #' '
-;        jsr screen_output
-;        ; </debug>
+        ; <debug>
+        lda #'I'
+        jsr screen_output
+        lda #':'
+        jsr screen_output
+        lda z8000_data
+        lsr a
+        lsr a
+        lsr a
+        lsr a
+        tax
+        lda hex_chars,x
+        jsr screen_output
+        lda z8000_data
+        and #$0F
+        tax
+        lda hex_chars,x
+        jsr screen_output
+        lda #' '
+        jsr screen_output
+        ; </debug>
         
         jsr scc_set_irq
         rts
@@ -135,27 +135,27 @@ scc_in_18:
 ; Output the character to RS-232C.
 scc_out_18:
 
-;        ; <debug>
-;        lda #'O'
-;        jsr screen_output
-;        lda #':'
-;        jsr screen_output
-;        lda z8000_data
-;        lsr a
-;        lsr a
-;        lsr a
-;        lsr a
-;        tax
-;        lda hex_chars,x
-;        jsr screen_output
-;        lda z8000_data
-;        and #$0F
-;        tax
-;        lda hex_chars,x
-;        jsr screen_output
-;        lda #' '
-;        jsr screen_output
-;        ; </debug>
+        ; <debug>
+        lda #'O'
+        jsr screen_output
+        lda #':'
+        jsr screen_output
+        lda z8000_data
+        lsr a
+        lsr a
+        lsr a
+        lsr a
+        tax
+        lda hex_chars,x
+        jsr screen_output
+        lda z8000_data
+        and #$0F
+        tax
+        lda hex_chars,x
+        jsr screen_output
+        lda #' '
+        jsr screen_output
+        ; </debug>
         
         lda z8000_data
         jmp serial_output

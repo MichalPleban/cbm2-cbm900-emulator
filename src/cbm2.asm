@@ -4,3 +4,4 @@
 .include "cbm2/irq.asm"
 .include "cbm2/kbd.asm"
 .include "cbm2/serial.asm"
+.include "cbm2/vga.asm"
