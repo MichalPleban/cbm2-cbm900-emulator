@@ -11,6 +11,14 @@ emul_init:
         rts
         
 nmi_handler:
+        dec z8000_request
+        rti
+        
+emul_handler:
+        inc z8000_request
+
+        ; Allow IRQ handler so that it is not starved.
+        cli
 
         ; Save registers
         sta nmi_save_a
@@ -21,13 +29,6 @@ nmi_handler:
         lda #$0F
         sta IND_REG
 
-        ; Check if interrupts were enabled when NMI handler was called.
-        pla
-        pha
-        and #$04
-        bne @no_irq
-        ; If yes, allow IRQ handler so that it is not starved.
-        cli
 @no_irq:
 
         ; Copy Z8000 status from the chipset register
@@ -117,7 +118,8 @@ nmi_finish:
         ; Acknowledge NMI & bring down the WAIT line
         sta (CHIPSET),y
         ldy nmi_save_y
-        rti
+;        rti
+        rts
 
 io_handle:
         jmp (io_jump)

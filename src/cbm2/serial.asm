@@ -54,7 +54,6 @@ serial_string:
 @end:
         rts
 
-
 serial_status:
         ldy #1
         lda (ACIA),y
@@ -68,19 +67,22 @@ serial_irq:
         beq @end 
 
         ; <debug>
-        lda #'.'
-        jsr screen_output
+;        lda #'.'
+;        jsr screen_output
         ; </debug>
         
+        ldy #0              ; Register 0 - serial data
+        lda (ACIA),y
         ldx serial_tail
         inx
         cpx serial_head
         beq @end            ; Buffer full
-        ldy #0              ; Register 0 - serial data
-        lda (ACIA),y
         dex
         sta SERIAL_BUFFER,x
         inc serial_tail
+
+        ; Re-enable interrupts so that the next byte can arrive
+        cli
         jsr scc_set_irq
 @end:
         rts

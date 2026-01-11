@@ -24,6 +24,7 @@ screen_ptr:     .res 2
 screen_invert:  .res 1
 
 ; Z8000 state
+z8000_request:  .res 1
 z8000_started:  .res 1
 z8000_addr:     .res 2
 z8000_data:     .res 1

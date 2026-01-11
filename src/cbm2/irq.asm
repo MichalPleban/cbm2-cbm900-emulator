@@ -51,7 +51,6 @@ irq_restart:
 irq_handler:
 
         ; Save registers
-        cld
         pha
         txa
         pha
@@ -65,26 +64,25 @@ irq_handler:
         ; Check TPI interrupt mask
         ldy #7
         lda (TPI1),y
-        pha
+        beq @acia
         
-        lsr a
-        bcc @not_60hz
-        jmp @end
-@not_60hz:
-        lsr a
-        bcc @not_srq
-        jmp @end
-@not_srq:
-        lsr a
-        bcc @not_cia
+        cmp #$10
+        beq @acia
         
         ; Re-enable IRQ to allow servicing higher priority ACIA interrupts
         cli
-        
+        cld
+        cmp #$04
+        bne @end
+
         ; Scan keyboard
         jsr kbd_scan
         
+        ; Update VGA screen
+        bit screen_charset
+        bpl @no_vga
         jsr vga_check_mirror
+@no_vga:
         
         ; Issue timer IRQ to the Z8000
 .ifdef DEBUG
@@ -96,29 +94,22 @@ irq_handler:
         jsr cio_timer
 @no_timer:
         lda timer_irq_enable
-        
+
+        ; Clear CIA interrupt flag. 
+        ldy #13
+        lda (CIA),y
+                
         jmp @end
-@not_cia:
-        lsr a
-        bcc @acia
-        jmp @end
+                
 @acia:
+        cld
         jsr serial_irq
+        
 @end:
         ; Clear TPI pending interrupt 
         ldy #7
         sta (TPI1),y
-        
-        ; Delayed clearing of CIA interrupt flag. 
-        ; If the flag is cleared earlier, an NMI in the middle of the IRQ handler will cause a race condition
-        ; that at some point causes the flag to not be cleared properly and the CIA IRQs get disabled.
-        pla
-        cmp #$04
-        bne @not_cia_again
-        ldy #13
-        lda (CIA),y
-@not_cia_again:
-
+                
         ; Restore registers
         pla
         sta IND_REG

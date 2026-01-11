@@ -1,4 +1,8 @@
 
+; TODO:
+;  - clear CTS signal when reading/writing from disk in bank 15
+;  - sporadic hard disk errors due to new NMI handler?
+
 .include "defs.asm"
 
 .code
@@ -70,6 +74,10 @@ no_expansion:
         cli
 @loop:
         jsr disk_handle
+        bit z8000_request
+        bpl @not_emul
+        jsr emul_handler
+@not_emul:
         lda kbd_stop
         bpl @loop
         jsr menu_show
@@ -78,7 +86,7 @@ no_expansion:
         jmp @loop
         
 banner:
-        .byt "Commodore C900 emulation layer version 0.5.2, (C) Michal Pleban", $0D, $0A
+        .byt "Commodore C900 emulation layer version 0.6.0, (C) Michal Pleban", $0D, $0A
         .byt "Press Run/Stop for menu.", $0D, $0A, $0D, $0A, 0
 
 .include "trace.asm"
@@ -91,6 +99,7 @@ banner:
 bank15_0500:
 
 sasi_load_bank15:
+        sei
         lda #$0F
         sta EXEC_REG
         ; Enable access to RAM & XOR A15
@@ -117,9 +126,11 @@ sasi_load_bank15:
         sta IND_REG
         lda #$01
         sta EXEC_REG
+        cli
         rts
 
 sasi_save_bank15:
+        sei
         lda #$0F
         sta EXEC_REG
         ; Enable access to RAM & XOR A15
@@ -146,9 +157,11 @@ sasi_save_bank15:
         sta IND_REG
         lda #$01
         sta EXEC_REG
+        cli
         rts
 
 sd_read_bank15:
+        sei
         lda #$0F
         sta EXEC_REG
         ; Enable access to RAM & XOR address lines if necessary
@@ -191,9 +204,11 @@ sd_read_bank15:
         sta IND_REG
         lda #$01
         sta EXEC_REG
+        cli
         rts
 
 sd_write_bank15:
+        sei
         lda #$0F
         sta EXEC_REG
         ; Enable access to RAM & XOR address lines if necessary
@@ -229,6 +244,7 @@ sd_write_bank15:
         sta IND_REG
         lda #$01
         sta EXEC_REG
+        cli
         rts
         
         .res ($0600-*), $FF
