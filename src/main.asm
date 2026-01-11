@@ -118,6 +118,7 @@ sasi_load_bank15:
         sta sasi_command, y 
         dey
         bpl @loop
+sd_finish:
         ; Disable access to RAM
         lda CHIPSET_BASE + REG_CONTROL
         and #<~(CTRL_RAMEN+CTRL_XOR15+CTRL_XOR19)
@@ -149,21 +150,16 @@ sasi_save_bank15:
         sta (scratchpad), y 
         dey
         bpl @loop
-        ; Disable access to RAM
-        lda CHIPSET_BASE + REG_CONTROL
-        and #<~(CTRL_RAMEN+CTRL_XOR15+CTRL_XOR19)
-        sta CHIPSET_BASE + REG_CONTROL
-        lda #$0F
-        sta IND_REG
-        lda #$01
-        sta EXEC_REG
-        cli
-        rts
+        jmp sd_finish
 
 sd_read_bank15:
         sei
         lda #$0F
         sta EXEC_REG
+        ; Drop RTS because we can't handle ACIA interrupts now
+        lda $DD02
+        and #$F7
+        sta $DD02
         ; Enable access to RAM & XOR address lines if necessary
         bit sd_bank
         bmi @computer_ram
@@ -196,21 +192,21 @@ sd_read_bank15:
         inc sd_ptr+1
         dec sd_loop+1
         bne @loop
-        ; Disable access to RAM
-        lda CHIPSET_BASE + REG_CONTROL
-        and #<~(CTRL_RAMEN+CTRL_XOR15+CTRL_XOR19)
-        sta CHIPSET_BASE + REG_CONTROL
-        lda #$0F
-        sta IND_REG
-        lda #$01
-        sta EXEC_REG
-        cli
-        rts
+sd_finish2:
+        ; Raise RTS again
+        lda $DD02
+        ora #$08
+        sta $DD02
+        jmp sd_finish
 
 sd_write_bank15:
         sei
         lda #$0F
         sta EXEC_REG
+        ; Drop RTS because we can't handle ACIA interrupts now
+        lda $DD02
+        and #$F7
+        sta $DD02
         ; Enable access to RAM & XOR address lines if necessary
         bit sd_bank
         bmi @computer_ram
@@ -236,16 +232,7 @@ sd_write_bank15:
         inc sd_ptr+1
         dec sd_loop+1
         bne @loop
-        ; Disable access to RAM
-        lda CHIPSET_BASE + REG_CONTROL
-        and #<~(CTRL_RAMEN+CTRL_XOR15+CTRL_XOR19)
-        sta CHIPSET_BASE + REG_CONTROL
-        lda #$0F
-        sta IND_REG
-        lda #$01
-        sta EXEC_REG
-        cli
-        rts
+        jmp sd_finish2
         
         .res ($0600-*), $FF
         
