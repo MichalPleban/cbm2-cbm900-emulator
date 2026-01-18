@@ -22,6 +22,10 @@ screen_x:       .res 1
 screen_y:       .res 1
 screen_ptr:     .res 2
 screen_invert:  .res 1
+screen_clr_x1:  .res 1
+screen_clr_y1:  .res 1
+screen_clr_x2:  .res 1
+screen_clr_y2:  .res 1
 
 ; Z8000 state
 z8000_request:  .res 1
@@ -116,6 +120,10 @@ vga_segment:    .res 1
 vga_ptr:        .res 2
 vga_buffer:     .res 2
 vga_mirror_buf: .res 2
+
+; VT52 emulation
+vt52_state:     .res 1
+vt52_tmp:       .res 1
 
 ; Temporary variables
 scratchpad:     .res 8

@@ -39,10 +39,7 @@ disk_handle:
         sta (CHIPSET),y
 
         ; Turn on the LED
-        ldy #REG_IO_PINS
-        lda (CHIPSET),y
-        ora #IO_LED
-        sta (CHIPSET),y
+        jsr led_on
 
         ; Clear pending request flag
         lda #$00
@@ -140,10 +137,7 @@ disk_finish:
         jsr sasi_save_bank15
         
         ; Turn off the LED
-        ldy #REG_IO_PINS
-        lda (CHIPSET),y
-        and #<~IO_LED
-        sta (CHIPSET),y
+        jsr led_off
         
         ; Restart the Z8000
         ldy #REG_CONTROL

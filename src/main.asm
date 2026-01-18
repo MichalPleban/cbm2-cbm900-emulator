@@ -86,7 +86,7 @@ no_expansion:
         jmp @loop
         
 banner:
-        .byt "Commodore C900 emulation layer version 0.6.0, (C) Michal Pleban", $0D, $0A
+        .byt "Commodore C900 emulation layer version 0.7.0, (C) Michal Pleban", $0D, $0A
         .byt "Press Run/Stop for menu.", $0D, $0A, $0D, $0A, 0
 
 .include "trace.asm"
@@ -293,7 +293,22 @@ copy_program:
 .include "cbm2.asm"
 .include "emul.asm"
 
+led_on:
+        ldy #REG_IO_PINS
+        lda (CHIPSET),y
+        ora #IO_LED
+        sta (CHIPSET),y
+        rts
+        
+led_off:
+        ldy #REG_IO_PINS
+        lda (CHIPSET),y
+        and #<~IO_LED
+        sta (CHIPSET),y
+        rts
+
 load_files:
+        jsr led_on
         lda #$00
         sta can_enter_menu
 
@@ -372,6 +387,7 @@ load_files:
         lda #<msg_ok
         ldy #>msg_ok
         jsr screen_string        
+        jsr led_off
         rts
         
 @disk_error:
@@ -381,6 +397,7 @@ load_files:
         jsr screen_output
         lda #$0A
         jsr screen_output
+        jsr led_off
         bit can_enter_menu
         bmi @can_menu
         lda #<banner_retry
@@ -421,7 +438,7 @@ load_files:
         jsr screen_output
         jmp load_files
         
-
+        
 .include "menu/menu.asm"
 .include "menu/config.asm"
         

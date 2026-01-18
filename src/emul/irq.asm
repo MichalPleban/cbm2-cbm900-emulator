@@ -7,6 +7,7 @@ irq_handle:
         jsr irq_debug_start
 .endif
 
+        ; Determine the source of the IRQ
         bit timer_irq_pending
         bpl @not_timer
         lda timer_irq_vector
@@ -14,7 +15,6 @@ irq_handle:
 @not_timer:
         bit scc_irq_pending
         bpl @not_serial_in
-        ; Determine the source of the IRQ
         lda #$00
         ldx kbd_head
         cpx kbd_tail
@@ -31,8 +31,13 @@ irq_handle:
         adc scc_irq_vector
         jmp @finish
 @not_serial_in:
-;        jsr disk_clear
+        bit disk_irq
+        bpl @nothing
+        jsr disk_clear
         lda #$80
+        bne @finish
+@nothing:
+        lda #$FF
 @finish:
         sta z8000_data
         

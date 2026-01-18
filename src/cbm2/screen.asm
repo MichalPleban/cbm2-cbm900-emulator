@@ -5,6 +5,7 @@ screen_charset = config_data + $29
 
 ; Initialize the screen routines
 screen_init:
+        jsr vt52_init
 ;        jsr vga_init
         jsr screen_clear
         lda #$00
@@ -46,10 +47,62 @@ screen_clear:
         sty screen_y
         rts
 
+; Clear a part of the screen
+; Destroyed: A, X, Y
+screen_clear_special:
+        lda #$D0
+        sta screen_ptr+1
+        lda #$00
+        sta screen_ptr
+        ldx #0
+@loop2:
+        ldy #0
+@loop1:
+        cpx screen_clr_y1
+        beq @do_check
+        bcc @dont_write
+        cpx screen_clr_y2
+        beq @do_check
+        bcs @dont_write
+        bcc @dont_check
+@do_check:
+        cpy screen_clr_x1
+        bcc @dont_write
+        cpy screen_clr_x2
+        bcs @dont_write
+@dont_check:
+        lda #' '
+        sta (screen_ptr),y
+@dont_write:
+        iny
+        cpy #80
+        bne @loop1
+        inx
+        cpx #25
+        beq @end
+        lda screen_ptr
+        clc
+        adc #80
+        sta screen_ptr
+        lda screen_ptr+1
+        adc #0
+        sta screen_ptr+1
+        jmp @loop2
+@end:
+        rts
+
 ; Output one character to the screen at the current position.
 ; Input: A = character
 ; Destroyed: A, X, Y
 screen_output:
+        bit vt52_state
+        bpl @not_vt52
+        jmp vt52_handle
+@not_vt52:        
+        cmp #$1B
+        bne @not_escape
+        jmp vt52_start
+@not_escape:
 ;        jmp vga_output
         cmp #$0D
         bne @not_cr
