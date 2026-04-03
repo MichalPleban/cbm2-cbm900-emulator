@@ -25,7 +25,6 @@ cio_timer:
         bpl @disabled
         lda #$80
         sta timer_irq_pending
-        jmp irq_issue
 @disabled:
         rts
                 
@@ -53,7 +52,6 @@ cio_out_00:
 cio_out_0c:
         lda #0
         sta timer_irq_pending
-        jsr irq_issue
         jmp cio_save
 
 cio_save:

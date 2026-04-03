@@ -32,10 +32,18 @@ disk_handle:
         bmi @handle
         rts
 @handle:
+.ifdef LOGGER
+        lda #'D'
+        jsr logger_store
+.endif
+
         ; Halt the Z8000
         ldy #REG_CONTROL
         lda (CHIPSET),y
         ora #CTRL_BUSREQ
+        sta (CHIPSET),y
+        ; Bring down WAIT line
+        ldy #REG_STATUS
         sta (CHIPSET),y
 
         ; Turn on the LED
@@ -145,10 +153,14 @@ disk_finish:
         and #<~CTRL_BUSREQ
         sta (CHIPSET),y
         
+.ifdef LOGGER
+        lda #'S'
+        jsr logger_store
+.endif
+
         ; Issue IRQ to the Z8000
         lda #$80
         sta disk_irq
-        jsr irq_issue
 
 @end:
         rts
@@ -311,7 +323,7 @@ disk_translate:
 disk_clear:
         lda #$00
         sta disk_irq
-        jmp irq_issue
+        rts
 
 ; ------------------------------------------------------------------------
 ; Print 8.3 filename to the screen

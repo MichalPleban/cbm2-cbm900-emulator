@@ -12,6 +12,20 @@ emul_init:
         
 nmi_handler:
         dec z8000_request
+.ifdef LOGGER
+        pha
+        txa
+        pha
+        tya
+        pha
+        lda #'N'
+        jsr logger_store
+        pla
+        tay
+        pla
+        tax
+        pla
+.endif
         rti
         
 emul_handler:
@@ -52,6 +66,12 @@ emul_handler:
         lda #$00
         sta io_unimplemented
 .endif
+.ifdef LOGGER
+        lda z8000_addr+1
+        jsr logger_store
+        lda z8000_addr
+        jsr logger_store
+.endif
 
         dec z8000_addr+1
         bpl @not_cio
@@ -86,7 +106,14 @@ emul_handler:
         beq @disk_clear
         lda #$80
         sta disk_request
-        jmp nmi_end
+        
+        ; Do not switch on the CPU while the disk request is being serviced
+        lda nmi_save_ind
+        sta IND_REG
+        ldx nmi_save_x
+        lda nmi_save_a
+        ldy nmi_save_y
+        rts
 @disk_clear:
         jsr disk_clear
         jmp nmi_end
@@ -94,10 +121,24 @@ emul_handler:
         jsr undefined
         
 nmi_end:
+        jsr irq_issue
 
 ; Finish showing debug banner
 .ifdef DEBUG
         jsr debug_end
+.endif
+.ifdef LOGGER
+        lda z8000_data
+        jsr logger_store
+        bit z8000_status
+        bpl @logger_write
+        lda #'I'
+        jsr logger_store
+        jmp @logger_read
+@logger_write:
+        lda #'O'
+        jsr logger_store
+@logger_read:
 .endif
 
 ; Restore registers

@@ -40,6 +40,12 @@ z8000_code:     .res 2
 irq_delay:      .res 1
 .endif
 
+; Logger pointer
+.ifdef LOGGER
+logger_ptr:     .res 2
+logger_tmp:     .res 2
+.endif
+
 ; NMI handler variables
 nmi_save_a:     .res 1
 nmi_save_x:     .res 1
@@ -120,6 +126,7 @@ vga_segment:    .res 1
 vga_ptr:        .res 2
 vga_buffer:     .res 2
 vga_mirror_buf: .res 2
+vga_busy:       .res 1
 
 ; VT52 emulation
 vt52_state:     .res 1

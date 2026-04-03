@@ -115,6 +115,8 @@ kbd_scan:
         lda ctrl_table,x
 @do_output:
         bpl @not_special
+        bit menu_visible
+        bmi @not_special
         and #$7F
         sec
         rol

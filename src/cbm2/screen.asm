@@ -6,7 +6,10 @@ screen_charset = config_data + $29
 ; Initialize the screen routines
 screen_init:
         jsr vt52_init
-;        jsr vga_init
+        bit screen_charset
+        bpl @no_vga
+        jsr vga_init
+@no_vga:        
         jsr screen_clear
         lda #$00
         sta screen_invert
@@ -28,7 +31,10 @@ screen_init:
 ; Clear screen and reset screen pointer to 0,0.
 ; Destroyed: A, X, Y
 screen_clear:
-;        jmp vga_clear
+        bit screen_charset
+        bpl @no_vga
+        jmp vga_clear
+@no_vga:
         lda #$D8
         sta SCREEN+1
         ldy #$00
@@ -103,7 +109,12 @@ screen_output:
         bne @not_escape
         jmp vt52_start
 @not_escape:
-;        jmp vga_output
+        bit screen_charset
+        bpl @no_vga
+        bit menu_visible
+        bmi @no_vga
+        jmp vga_output
+@no_vga:
         cmp #$0D
         bne @not_cr
         lda #0
@@ -355,9 +366,15 @@ menu_show:
         sta menu_ptr_save+3
         lda screen_invert
         sta menu_ptr_save+4
-        lda#$00
+        lda #$00
         sta screen_invert
-        
+
+        ldy #VGA_CMD
+        lda #$80
+        sta (SID),y
+        bit screen_charset
+        bpl @no_vga        
+                
         ; Save the current screen
         lda #<screen_save
         sta scratchpad
@@ -381,6 +398,7 @@ menu_show:
         cmp #$D8
         bne @loop_copy
 
+@no_vga:
         ; Hide CRTC cursor
         ldx #15
         lda #$FF
@@ -388,8 +406,15 @@ menu_show:
         dex
         jsr crtc_write
 
-        jsr menu_enter
+        jsr menu_enter        
         
+        bit screen_charset
+        bpl @no_vga2
+        ldy #VGA_CMD
+        lda #$81
+        sta (SID),y
+        bne @do_restore
+@no_vga2:
         ; Restore the screen
         lda #<screen_save
         sta scratchpad
@@ -412,7 +437,8 @@ menu_show:
         lda scratchpad+3
         cmp #$D8
         bne @loop_restore
-           
+
+@do_restore:           
         ; Restore screen pointers and variables
         lda menu_ptr_save
         sta SCREEN
@@ -425,6 +451,10 @@ menu_show:
         lda menu_ptr_save+4
         sta screen_invert
         jsr screen_cursor
+        bit screen_charset
+        bpl @no_vga3
+        jsr vga_cursor
+@no_vga3:
 
         ; Start the CPU if needed    
         bit z8000_started

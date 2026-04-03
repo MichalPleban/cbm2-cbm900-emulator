@@ -1,6 +1,6 @@
 
 ; 100 Hz counter constant
-COUNTER = 20000 
+COUNTER = 20000
 
 irq_init:
         ; Set up IRQ handler vector at the top of RAM

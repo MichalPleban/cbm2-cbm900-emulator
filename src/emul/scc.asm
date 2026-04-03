@@ -35,7 +35,7 @@ scc_set_irq:
 @no_irq:
         lda #$00
         sta scc_irq_pending
-        jmp irq_issue        
+        rts
         
 ; Register 00 - line A status
 ; We return 04 to indicate that it's OK to send the next character

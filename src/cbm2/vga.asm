@@ -3,10 +3,14 @@ VGA_CMD = $BC
 VGA_DATA = $BD
 
 VGA_BUFFER = $E000
-VGA_DELAY = 50      ; Screen refresh every 0.1s
+VGA_DELAY = 10      ; Screen refresh every 0.1s
 
 vga_init:
         ; VGA command - switch to VGA mode
+        lda #$00
+        sta vga_busy
+        lda #VGA_DELAY
+        sta vga_delay
         ldy #VGA_CMD
         lda #$81
         sta (SID),y
@@ -14,6 +18,10 @@ vga_init:
         rts
 
 vga_clear:
+        ; Disable screen mirroring
+        lda #$80
+        sta vga_busy
+        
         ; VGA command - clear screen
         ldy #VGA_CMD
         lda #$82
@@ -45,12 +53,18 @@ vga_clear:
         ; Default text attribute
         lda #$07
         sta vga_attr
+        
+        ; Re-enable screen mirroring
+        lda #$00
+        sta vga_busy
         rts
 
 vga_check_mirror:
         ; Check if any part of the screen is dirty
         lda vga_dirty
         beq @end
+        lda vga_busy
+        bne @end
         
         ; Check if it's time to copy screen
         lda vga_delay
@@ -103,20 +117,25 @@ vga_mirror:
         bne @next_segment
 
 vga_output:
+        dec vga_busy
         cmp #$0D
         bne @not_cr
         lda #0
         sta vga_x
+        sta vga_busy
         rts
 @not_cr:
         cmp #$07
         bne @not_bell
+        lda #0
+        sta vga_busy
         rts
 @not_bell:
         cmp #$08
         bne @not_bksp
         lda vga_x
         bne @bksp
+        sta vga_busy
         rts
 @bksp:
         dec vga_x
@@ -136,6 +155,7 @@ vga_output:
         and #$E0
         ; Ignore control characters
         bne @output
+        sta vga_busy
         rts
 @output:
         txa
@@ -176,6 +196,8 @@ vga_advance:
         cpy #80
         beq vga_newline
         sty vga_x
+        lda #0
+        sta vga_busy
         rts        
 vga_newline:
         ldy #$00
@@ -195,8 +217,11 @@ vga_newline:
         ; Refresh immediately on newline
         lda #0
         sta vga_delay
+        sta vga_busy
         rts
 vga_scroll:
+;        lda #$80
+;        sta vga_busy
         ldy #16
         ldx #00
         lda #<VGA_BUFFER
@@ -234,16 +259,21 @@ vga_scroll:
         inc vga_buffer+1
         bne @clear_loop
 @end:
-        lda #$FF
-        sta vga_dirty
         ; Refresh immediately on scroll
+        ldy #VGA_CMD
+        lda #$83
+        sta (SID),y        
+        lda #$C0
+        sta vga_dirty
+        jsr vga_mirror
+        lda VGA_DELAY
+;        sta vga_delay
         lda #0
+        sta vga_busy
         rts
         
 ; Position VGA cursor according to the screen position
 vga_cursor:
-        bit menu_visible
-        bmi @end
         lda vga_ptr+1
         lsr a
         sta vga_buffer+1
@@ -260,6 +290,8 @@ vga_cursor:
         dex
         jsr crtc_write
 @end:
+        lda #0
+        sta vga_busy
         rts
 
 vga_bits:

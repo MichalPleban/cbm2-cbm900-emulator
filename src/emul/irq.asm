@@ -40,7 +40,13 @@ irq_handle:
         lda #$FF
 @finish:
         sta z8000_data
-        
+
+.ifdef LOGGER
+        jsr logger_store
+        lda #'Q'
+        jsr logger_store
+.endif
+                
 ; Finish showing debug info
 .ifdef DEBUG
         jsr irq_debug_end

@@ -6,3 +6,5 @@
 .include "cbm2/serial.asm"
 .include "cbm2/vga.asm"
 .include "cbm2/vt52.asm"
+
+.include "cbm2/logger.asm"

@@ -15,7 +15,7 @@ menu_redraw:
         jsr kbd_fetch
         
         ; F1 - Select floppy image
-        cmp #$C0
+        cmp #$88
         bne @not_f1
         jsr menu_select_floppy
         jsr save_config        
@@ -23,7 +23,7 @@ menu_redraw:
         
 @not_f1: 
         ; F2 - Eject floppy
-        cmp #$C1
+        cmp #$89
         bne @not_f2
         lda #$00
         sta floppy_present
@@ -32,7 +32,7 @@ menu_redraw:
 
 @not_f2:
         ; F3 - Select hard disk image
-        cmp #$C2
+        cmp #$8A
         bne @not_f3
         jsr menu_select_hdd
         jsr save_config        
@@ -40,7 +40,7 @@ menu_redraw:
         
 @not_f3: 
         ; F5 - Video configuration
-        cmp #$C4
+        cmp #$8C
         bne @not_f5
         jsr menu_video
         jsr save_config        
@@ -48,7 +48,7 @@ menu_redraw:
 
 @not_f5: 
         ; F6 - Reset config
-        cmp #$C5
+        cmp #$8D
         bne @not_f6
         jsr menu_reset_config
         jsr save_config        
@@ -58,7 +58,7 @@ menu_redraw:
         ; F8 - Reset CPU, only if started
         bit z8000_started
         bpl @not_f8
-        cmp #$C7
+        cmp #$8F
         bne @not_f8
         ldy #6
         lda (CHIPSET),y

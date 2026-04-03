@@ -41,7 +41,9 @@ start:
 no_expansion:        
         
         jsr machine_init
-        
+.ifdef LOGGER
+        jsr logger_init
+.endif        
         ; Pull /RESET low
         ldy #6
         lda (CHIPSET),y
@@ -78,6 +80,7 @@ no_expansion:
         bpl @not_emul
         jsr emul_handler
 @not_emul:
+        jsr irq_issue
         lda kbd_stop
         bpl @loop
         jsr menu_show
@@ -86,7 +89,7 @@ no_expansion:
         jmp @loop
         
 banner:
-        .byt "Commodore C900 emulation layer version 0.7.1, (C) Michal Pleban", $0D, $0A
+        .byt "Commodore C900 emulation layer version 0.7.2, (C) Michal Pleban", $0D, $0A
         .byt "Press Run/Stop for menu.", $0D, $0A, $0D, $0A, 0
 
 .include "trace.asm"
@@ -233,6 +236,12 @@ sd_write_bank15:
         dec sd_loop+1
         bne @loop
         jmp sd_finish2
+        
+reset:
+        lda #$0F
+        sta EXEC_REG
+        jmp $1000
+        
         
         .res ($0600-*), $FF
         
