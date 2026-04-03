@@ -89,7 +89,7 @@ no_expansion:
         jmp @loop
         
 banner:
-        .byt "Commodore C900 emulation layer version 0.7.2, (C) Michal Pleban", $0D, $0A
+        .byt "Commodore C900 emulation layer version 0.8.0, (C) Michal Pleban", $0D, $0A
         .byt "Press Run/Stop for menu.", $0D, $0A, $0D, $0A, 0
 
 .include "trace.asm"

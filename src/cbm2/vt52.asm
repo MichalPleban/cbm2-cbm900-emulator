@@ -42,6 +42,12 @@ vt52_handle:
         lda vt52_tmp
         tay
 @do_cursor:
+        bit screen_charset
+        bpl @no_vga_cursor
+        jsr vga_position
+        jsr vga_cursor
+        jmp @end
+@no_vga_cursor:
         jsr screen_position
         jsr screen_cursor
         jmp @end
@@ -60,6 +66,12 @@ vt52_handle:
         cmp #'E'
         bne @not_e
         ; Esc E - clear screen
+        bit screen_charset
+        bpl @no_vga_e
+        jsr vga_clear
+        jsr vga_cursor
+        jmp @end
+@no_vga_e:
         jsr screen_clear
         jsr screen_cursor
         jmp @end
@@ -70,6 +82,13 @@ vt52_handle:
         ; Esc H - cursor home
         ldy #0
         ldx #0
+        beq @do_cursor
+        bit screen_charset
+        bpl @no_vga_h
+        jsr vga_position
+        jsr vga_cursor
+        jmp @end
+@no_vga_h:
         jsr screen_position
         jsr screen_cursor
         jmp @end
@@ -86,13 +105,18 @@ vt52_handle:
         sta screen_clr_x2
         lda #25
         sta screen_clr_y2
+        bit screen_charset
+        bpl @no_vga_j
+        jsr vga_clear_special
+        jmp @end
+@no_vga_j:        
         jsr screen_clear_special
         jmp @end
         
 @not_j:
         cmp #'K'
         bne @not_k
-        ; Esc J - clear rest of line
+        ; Esc K - clear rest of line
         lda screen_x
         sta screen_clr_x1
         lda screen_y
@@ -100,6 +124,11 @@ vt52_handle:
         sta screen_clr_y2
         lda #80
         sta screen_clr_x2
+        bit screen_charset
+        bpl @no_vga_k
+        jsr vga_clear_special
+        jmp @end
+@no_vga_k:        
         jsr screen_clear_special
         jmp @end
         

@@ -293,6 +293,7 @@ menu_select_floppy:
         bcs @end
         
         ; Try to map the file
+        jsr led_on
         lda menu_file_pos
         tax
         lda menu_file_mul, x
@@ -328,6 +329,9 @@ menu_select_floppy:
 
         clc
 @end:
+        php
+        jsr led_off
+        plp        
         rts
                 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -423,6 +427,7 @@ menu_select_hdd:
         bcs @end
         
         ; Try to map the file
+        jsr led_on
         lda menu_file_pos
         tax
         lda menu_file_mul, x
@@ -456,6 +461,9 @@ menu_select_hdd:
 
         clc        
 @end:
+        php
+        jsr led_off
+        plp        
         rts
                 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

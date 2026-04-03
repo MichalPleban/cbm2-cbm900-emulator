@@ -117,8 +117,6 @@ serial_head:	.res 1
 serial_tail:	.res 1
 
 ; VGA card variables
-vga_x:          .res 1
-vga_y:          .res 1
 vga_attr:       .res 1
 vga_delay:      .res 1
 vga_dirty:      .res 1

@@ -35,8 +35,8 @@ vga_clear:
         sta vga_buffer+1
         sta vga_ptr+1
         ldx #0
-        stx vga_x
-        stx vga_y
+        stx screen_x
+        stx screen_y
         stx vga_dirty
         lda #VGA_DELAY
         sta vga_delay
@@ -121,7 +121,7 @@ vga_output:
         cmp #$0D
         bne @not_cr
         lda #0
-        sta vga_x
+        sta screen_x
         sta vga_busy
         rts
 @not_cr:
@@ -133,20 +133,20 @@ vga_output:
 @not_bell:
         cmp #$08
         bne @not_bksp
-        lda vga_x
+        lda screen_x
         bne @bksp
         sta vga_busy
         rts
 @bksp:
-        dec vga_x
+        dec screen_x
         jmp vga_cursor
 @not_bksp:        
         cmp #$09
         bne @not_tab
-        lda vga_x
+        lda screen_x
         and #$F8
         ora #$07
-        sta vga_x
+        sta screen_x
         bne vga_advance
 @not_tab:        
         cmp #$0A
@@ -161,7 +161,7 @@ vga_output:
         txa
         pha
         ; Calculate the character address
-        lda vga_x
+        lda screen_x
         asl a
         clc
         adc vga_ptr
@@ -191,22 +191,22 @@ vga_output:
         jmp vga_advance
         
 vga_advance:
-        ldy vga_x
+        ldy screen_x
         iny
         cpy #80
         beq vga_newline
-        sty vga_x
+        sty screen_x
         lda #0
         sta vga_busy
         rts        
 vga_newline:
         ldy #$00
-        sty vga_x
-        ldy vga_y
+        sty screen_x
+        ldy screen_y
         iny
         cpy #25
         beq vga_scroll
-        sty vga_y
+        sty screen_y
         clc
         lda vga_ptr
         adc #160
@@ -280,7 +280,7 @@ vga_cursor:
         lda vga_ptr
         ror a
         sta vga_buffer
-        lda vga_x
+        lda screen_x
         clc
         adc vga_buffer
         ldx #15
@@ -294,6 +294,93 @@ vga_cursor:
         sta vga_busy
         rts
 
+vga_position:
+        stx screen_x
+        sty screen_y
+        lda #<VGA_BUFFER
+        sta vga_ptr
+        lda #>VGA_BUFFER
+        sta vga_ptr+1
+        dey
+        bmi @end
+@loop:
+        lda vga_ptr
+        clc
+        adc #$A0
+        sta vga_ptr
+        lda vga_ptr+1
+        adc #0
+        sta vga_ptr+1
+        dey
+        bpl @loop
+@end:
+        rts
+
+        
+; Clear a part of the screen
+; Destroyed: A, X, Y
+vga_clear_special:
+        lda #$80
+        sta vga_busy
+        lda #<VGA_BUFFER
+        sta vga_buffer
+        lda #>VGA_BUFFER
+        sta vga_buffer+1
+        ldx #0
+@loop2:
+        ldy #0
+@loop1:
+        cpx screen_clr_y1
+        beq @do_check
+        bcc @dont_write
+        cpx screen_clr_y2
+        beq @do_check
+        bcs @dont_write
+        bcc @dont_check
+@do_check:
+        cpy screen_clr_x1
+        bcc @dont_write
+        cpy screen_clr_x2
+        bcs @dont_write
+@dont_check:
+        txa
+        pha
+        lda #0
+        tax
+        sta (vga_buffer,x)
+        inc vga_buffer
+        sta (vga_buffer,x)
+        dec vga_buffer
+        lda vga_buffer+1
+        lsr a
+        and #$07
+        tax
+        lda vga_bits,x
+        ora vga_dirty
+        sta vga_dirty
+        pla
+        tax
+@dont_write:
+        lda vga_buffer
+        clc
+        adc #2
+        sta vga_buffer
+        lda vga_buffer+1
+        adc #0
+        sta vga_buffer+1
+        iny
+        cpy #80
+        bne @loop1
+        inx
+        cpx #25
+        beq @end
+        bne @loop2
+@end:
+        lda #$00
+        sta vga_busy
+        rts
+
+        
 vga_bits:
         .byte $01, $02, $04, $08, $10, $20, $40, $80
         
