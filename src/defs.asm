@@ -26,8 +26,6 @@ screen_clr_x1:  .res 1
 screen_clr_y1:  .res 1
 screen_clr_x2:  .res 1
 screen_clr_y2:  .res 1
-screen_old_mode: .res 1
-screen_new_mode: .res 1
 
 ; Z8000 state
 z8000_request:  .res 1
@@ -142,6 +140,11 @@ cio_registers:  .res $40
 cio2_registers: .res $40
 scc_registers:  .res $20
 sasi_command:   .res $20
+
+; Additional variables
+screen_old_mode: .res 1
+screen_new_mode: .res 1
+
 
 .org $0300
 

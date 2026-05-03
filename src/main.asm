@@ -349,7 +349,9 @@ load_files:
         lda #<config_mapping
         ldy #>config_mapping
         jsr fat32_scan_file
-        bcs @disk_error
+        bcc @no_error2
+        jmp @disk_error
+@no_error2:        
         jsr load_config
         bcs @disk_error
         lda screen_charset
@@ -465,7 +467,6 @@ load_files:
 .include "menu/menu.asm"
 .include "menu/config.asm"
 
-.include "trace.asm"
 
         
 banner_sd:      .byt "Initializing SD card... ", 0

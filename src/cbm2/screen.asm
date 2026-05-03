@@ -555,6 +555,18 @@ menu_video:
         lda #<menu_video_3
         ldy #>menu_video_3
         jsr screen_string
+        ldx #22
+        ldy #12
+        jsr screen_position
+        lda #<menu_video_r
+        ldy #>menu_video_r
+        jsr screen_string
+        ldx #22
+        ldy #13
+        jsr screen_position
+        lda #<menu_video_r2
+        ldy #>menu_video_r2
+        jsr screen_string
 @show_options:
         ldx #22
         ldy #6
@@ -628,3 +640,7 @@ menu_video_2:
         .byt "B: Inbuilt video, PC charset", 0
 menu_video_3:
         .byt "C: VGA adapter", 0
+menu_video_r:
+        .byt "WARNING: Changing the video mode", 0
+menu_video_r2:
+        .byt "will clear the screen.", 0
