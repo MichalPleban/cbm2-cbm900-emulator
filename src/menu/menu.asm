@@ -43,7 +43,13 @@ menu_redraw:
         cmp #$8C
         bne @not_f5
         jsr menu_video
-        jsr save_config        
+        sei
+        lda screen_new_mode
+        sta screen_charset
+        jsr save_config
+        lda screen_old_mode
+        sta screen_charset     
+        cli
         jmp menu_redraw
 
 @not_f5: 

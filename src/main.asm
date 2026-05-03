@@ -1,8 +1,4 @@
 
-; TODO:
-;  - clear CTS signal when reading/writing from disk in bank 15
-;  - sporadic hard disk errors due to new NMI handler?
-
 .include "defs.asm"
 
 .code
@@ -52,6 +48,9 @@ no_expansion:
         lda #0
         sta z8000_started
         
+        lda #0
+        sta screen_old_mode
+        sta screen_charset
         jsr screen_init
         lda #<banner
         ldy #>banner
@@ -62,8 +61,16 @@ no_expansion:
         jsr irq_init
         cli
         jsr load_files
-;        jsr irq_restart
+        bcc @loaded
+        jsr screen_init
+        lda #<banner
+        ldy #>banner
+        jsr screen_string
+        lda screen_charset
+        sta screen_old_mode
+        jsr load_files
         
+@loaded:
         ; Pull /RESET high
         ldy #6
         lda (CHIPSET),y
@@ -89,10 +96,8 @@ no_expansion:
         jmp @loop
         
 banner:
-        .byt "Commodore C900 emulation layer version 0.8.0, (C) Michal Pleban", $0D, $0A
+        .byt "Commodore C900 emulation layer version 0.8.1, (C) Michal Pleban", $0D, $0A
         .byt "Press Run/Stop for menu.", $0D, $0A, $0D, $0A, 0
-
-.include "trace.asm"
 
         .res ($0500-*), $FF
 
@@ -338,13 +343,21 @@ load_files:
         lda #<config_filename
         ldy #>config_filename
         jsr fat32_find_file
-        bcs @disk_error
+        bcc @no_error
+        jmp @disk_error
+@no_error:
         lda #<config_mapping
         ldy #>config_mapping
         jsr fat32_scan_file
         bcs @disk_error
         jsr load_config
         bcs @disk_error
+        lda screen_charset
+        cmp screen_old_mode
+        beq @charset_ok
+        sec
+        rts
+@charset_ok:
         lda #<msg_ok
         ldy #>msg_ok
         jsr screen_string
@@ -397,6 +410,7 @@ load_files:
         ldy #>msg_ok
         jsr screen_string        
         jsr led_off
+        clc
         rts
         
 @disk_error:
@@ -450,6 +464,9 @@ load_files:
         
 .include "menu/menu.asm"
 .include "menu/config.asm"
+
+.include "trace.asm"
+
         
 banner_sd:      .byt "Initializing SD card... ", 0
 banner_config:  .byt "Loading configuration file CONFIG.CFG...", 0

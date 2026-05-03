@@ -368,12 +368,13 @@ menu_show:
         sta menu_ptr_save+4
         lda #$00
         sta screen_invert
+        lda screen_charset
+        sta screen_old_mode
+        sta screen_new_mode
 
         ldy #VGA_CMD
         lda #$80
         sta (SID),y
-        bit screen_charset
-        bpl @no_vga        
                 
         ; Save the current screen
         lda #<screen_save
@@ -398,7 +399,6 @@ menu_show:
         cmp #$D8
         bne @loop_copy
 
-@no_vga:
         ; Hide CRTC cursor
         ldx #15
         lda #$FF
@@ -451,6 +451,12 @@ menu_show:
         lda menu_ptr_save+4
         sta screen_invert
         jsr screen_cursor
+        lda screen_new_mode
+        sta screen_charset
+        cmp screen_old_mode
+        beq @no_change
+        jsr screen_init
+@no_change:
         bit screen_charset
         bpl @no_vga3
         jsr vga_cursor
@@ -549,23 +555,11 @@ menu_video:
         lda #<menu_video_3
         ldy #>menu_video_3
         jsr screen_string
-        ldx #22
-        ldy #12
-        jsr screen_position
-        lda #<menu_video_r
-        ldy #>menu_video_r
-        jsr screen_string
-        ldx #22
-        ldy #13
-        jsr screen_position
-        lda #<menu_video_r2
-        ldy #>menu_video_r2
-        jsr screen_string
 @show_options:
         ldx #22
         ldy #6
         jsr screen_position
-        lda screen_charset
+        lda screen_new_mode
         beq @cbm_charset
         lda #$20
         bne @show_first
@@ -576,7 +570,7 @@ menu_video:
         ldx #22
         ldy #8
         jsr screen_position
-        bit screen_charset
+        bit screen_new_mode
         bvs @pc_charset
         lda #$20
         bne @show_second
@@ -587,7 +581,7 @@ menu_video:
         ldx #22
         ldy #10
         jsr screen_position
-        bit screen_charset
+        bit screen_new_mode
         bmi @vga_card
         lda #$20
         bne @show_third
@@ -603,7 +597,7 @@ menu_video:
         bne @not_a
 @is_a:
         lda #$00
-        sta screen_charset
+        sta screen_new_mode
         beq @show_options
 @not_a:
         cmp #'b'
@@ -612,7 +606,7 @@ menu_video:
         bne @not_b
 @is_b:
         lda #$40
-        sta screen_charset
+        sta screen_new_mode
         bne @show_options
 @not_b:
         cmp #'c'
@@ -621,7 +615,7 @@ menu_video:
         bne @not_c
 @is_c:
         lda #$80
-        sta screen_charset
+        sta screen_new_mode
         bne @show_options
 @not_c:
         cmp #27
@@ -634,7 +628,3 @@ menu_video_2:
         .byt "B: Inbuilt video, PC charset", 0
 menu_video_3:
         .byt "C: VGA adapter", 0
-menu_video_r:
-        .byt "WARNING: Video mode change will only", 0
-menu_video_r2:
-        .byt "take effect after computer restart.", 0

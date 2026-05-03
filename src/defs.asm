@@ -26,6 +26,8 @@ screen_clr_x1:  .res 1
 screen_clr_y1:  .res 1
 screen_clr_x2:  .res 1
 screen_clr_y2:  .res 1
+screen_old_mode: .res 1
+screen_new_mode: .res 1
 
 ; Z8000 state
 z8000_request:  .res 1
